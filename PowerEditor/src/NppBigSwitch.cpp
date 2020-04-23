@@ -2355,13 +2355,67 @@ LRESULT Notepad_plus::process(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 			break;
 		}
 
-		case NPPM_INTERNAL_SETTING_EDGE_SIZE:
+		case NPPM_INTERNAL_EDGEMULTISETSIZE:
 		{
-			ScintillaViewParams & svp = (ScintillaViewParams &)(NppParameters::getInstance()).getSVP();
-			_mainEditView.execute(SCI_SETEDGECOLUMN, svp._edgeNbColumn);
-			_subEditView.execute(SCI_SETEDGECOLUMN, svp._edgeNbColumn);
-			break;
+			_mainEditView.execute(SCI_MULTIEDGECLEARALL);
+			_subEditView.execute(SCI_MULTIEDGECLEARALL);
+
+			ScintillaViewParams & svp = (ScintillaViewParams &)nppParam.getSVP();
+
+			StyleArray & stylers = NppParameters::getInstance().getMiscStylerArray();
+			COLORREF multiEdgeColor = liteGrey;
+			int i = stylers.getStylerIndexByName(TEXT("Edge colour"));
+			if (i != -1)
+			{
+				Style & style = stylers.getStyler(i);
+				multiEdgeColor = style._fgColor;
+			}
+
+			const size_t twoPower13 = 8192;
+			size_t nbColAdded = 0;
+			for (auto i : svp._edgeMultiColumnPos)
+			{
+				// it's absurd to set columns beyon 8000, even it's a long line.
+				// So let's ignore all the number greater than 2^13
+				if (i > twoPower13)
+					continue;
+
+				_mainEditView.execute(SCI_MULTIEDGEADDLINE, i, multiEdgeColor);
+				_subEditView.execute(SCI_MULTIEDGEADDLINE, i, multiEdgeColor);
+
+				++nbColAdded;
+			}
+
+			int mode;
+			switch (nbColAdded)
+			{
+				case 0:
+				{
+					mode = EDGE_NONE;
+					break;
+				}
+				case 1:
+				{
+					if (svp._isEdgeBgMode)
+					{
+						mode = EDGE_BACKGROUND;
+						_mainEditView.execute(SCI_SETEDGECOLUMN, svp._edgeMultiColumnPos[0]);
+						_subEditView.execute(SCI_SETEDGECOLUMN, svp._edgeMultiColumnPos[0]);
+					}
+					else
+					{
+						mode = EDGE_MULTILINE;
+					}
+					break;
+				}
+				default:
+					mode = EDGE_MULTILINE;
+			}
+
+			_mainEditView.execute(SCI_SETEDGEMODE, mode);
+			_subEditView.execute(SCI_SETEDGEMODE, mode);
 		}
+		break;
 
 		case NPPM_INTERNAL_SETTING_TAB_REPLCESPACE:
 		case NPPM_INTERNAL_SETTING_TAB_SIZE:
