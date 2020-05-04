@@ -1202,12 +1202,7 @@ INT_PTR CALLBACK FindReplaceDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM
 					if ((lstrlen(directory) > 0) && (directory[lstrlen(directory)-1] != '\\'))
 						_options._directory += TEXT("\\");
 
-					generic_string msg = TEXT("Are you sure you want to replace all occurrences in :\r");
-					msg += _options._directory;
-					msg += TEXT("\rfor file type : ");
-					msg += _options._filters[0]?_options._filters:TEXT("*.*");
-					int res = ::MessageBox(NULL, msg.c_str(), TEXT("Are you sure?"), MB_OKCANCEL | MB_DEFBUTTON2 | MB_TASKMODAL);
-					if (res == IDOK)
+					if (replaceInFilesConfirmCheck(_options._directory, _options._filters))
 					{
 						HWND hFindCombo = ::GetDlgItem(_hSelf, IDFINDWHAT);
 						_options._str2Search = getTextFromCombo(hFindCombo);
@@ -2801,12 +2796,7 @@ void FindReplaceDlg::execSavedCommand(int cmd, uptr_t intValue, const generic_st
 
 					case IDD_FINDINFILES_REPLACEINFILES:
 					{
-						generic_string msg = TEXT("Are you sure you want to replace all occurrences in :\r");
-						msg += _env->_directory;
-						msg += TEXT("\rfor file type : ");
-						msg += (_env->_filters[0]) ? _env->_filters : TEXT("*.*");
-
-						if (::MessageBox(_hParent, msg.c_str(), TEXT("Are you sure?"), MB_OKCANCEL | MB_DEFBUTTON2) == IDOK)
+						if (replaceInFilesConfirmCheck(_env->_directory, _env->_filters))
 						{
 							nppParamInst._isFindReplacing = true;
 							::SendMessage(_hParent, WM_REPLACEINFILES, 0, 0);
@@ -2933,7 +2923,7 @@ void FindReplaceDlg::clearMarks(const FindOption& opt)
 		int endPosition = cr.cpMax;
 
 		(*_ppEditView)->execute(SCI_SETINDICATORCURRENT, SCE_UNIVERSAL_FOUND_STYLE);
-		(*_ppEditView)->execute(SCI_INDICATORCLEARRANGE, startPosition, endPosition);
+		(*_ppEditView)->execute(SCI_INDICATORCLEARRANGE, startPosition, endPosition - startPosition);
 
 		if (opt._doMarkLine)
 		{
@@ -3189,6 +3179,36 @@ void FindReplaceDlg::drawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 	::DrawText(lpDrawItemStruct->hDC, ptStr, lstrlen(ptStr), &rect, DT_SINGLELINE | DT_VCENTER | DT_LEFT);
 }
 
+bool FindReplaceDlg::replaceInFilesConfirmCheck(generic_string directory, generic_string fileTypes)
+{
+	bool confirmed = false;
+
+	NativeLangSpeaker* pNativeSpeaker = (NppParameters::getInstance()).getNativeLangSpeaker();
+
+	generic_string title = pNativeSpeaker->getLocalizedStrFromID("replace-in-files-confirm-title", TEXT("Are you sure?"));
+
+	generic_string msg = pNativeSpeaker->getLocalizedStrFromID("replace-in-files-confirm-directory", TEXT("Are you sure you want to replace all occurrences in :"));
+	msg += TEXT("\r\r");
+	msg += directory;
+
+	msg += TEXT("\r\r");
+
+	generic_string msg2 = pNativeSpeaker->getLocalizedStrFromID("replace-in-files-confirm-filetype", TEXT("For file type :"));
+	msg2 += TEXT("\r\r");
+	msg2 += fileTypes[0] ? fileTypes : TEXT("*.*");
+
+	msg += msg2;
+
+	int res = ::MessageBox(NULL, msg.c_str(), title.c_str(), MB_OKCANCEL | MB_DEFBUTTON2 | MB_TASKMODAL);
+
+	if (res == IDOK)
+	{
+		confirmed = true;
+	}
+
+	return confirmed;
+}
+
 void Finder::addSearchLine(const TCHAR *searchName)
 {
 	generic_string str = TEXT("Search \"");
@@ -3232,18 +3252,18 @@ void Finder::addFileHitCount(int count)
 	++_nbFoundFiles;
 }
 
-void Finder::addSearchHitCount(int count, bool isMatchLines)
+void Finder::addSearchHitCount(int count, int countSearched, bool isMatchLines)
 {
 	const TCHAR *moreInfo = isMatchLines ? TEXT(" - Line Filter Mode: only display the filtered results") :TEXT("");
 	TCHAR text[100];
 	if (count == 1 && _nbFoundFiles == 1)
-		wsprintf(text, TEXT(" (1 hit in 1 file%s)"), moreInfo);
+		wsprintf(text, TEXT(" (1 hit in 1 file of %i searched%s)"), countSearched, moreInfo);
 	else if (count == 1 && _nbFoundFiles != 1)
-		wsprintf(text, TEXT(" (1 hit in %i files%s)"), _nbFoundFiles, moreInfo);
+		wsprintf(text, TEXT(" (1 hit in %i files of %i searched%s)"), _nbFoundFiles, countSearched, moreInfo);
 	else if (count != 1 && _nbFoundFiles == 1)
-		wsprintf(text, TEXT(" (%i hits in 1 file%s)"), count, moreInfo);
+		wsprintf(text, TEXT(" (%i hits in 1 file of %i searched%s)"), count, countSearched, moreInfo);
 	else if (count != 1 && _nbFoundFiles != 1)
-		wsprintf(text, TEXT(" (%i hits in %i files%s)"), count, _nbFoundFiles, moreInfo);
+		wsprintf(text, TEXT(" (%i hits in %i files of %i searched%s)"), count, _nbFoundFiles, countSearched, moreInfo);
 	setFinderReadOnly(false);
 	_scintView.insertGenericTextFrom(_lastSearchHeaderPos, text);
 	setFinderReadOnly(true);
@@ -3378,7 +3398,7 @@ void Finder::beginNewFilesSearch()
 	_scintView.collapse(searchHeaderLevel - SC_FOLDLEVELBASE, fold_collapse);
 }
 
-void Finder::finishFilesSearch(int count, bool isMatchLines)
+void Finder::finishFilesSearch(int count, int searchedCount, bool isMatchLines)
 {
 	std::vector<FoundInfo>* _pOldFoundInfos;
 	std::vector<SearchResultMarking>* _pOldMarkings;
@@ -3396,7 +3416,7 @@ void Finder::finishFilesSearch(int count, bool isMatchLines)
 	if (_pMainMarkings->size() > 0)
 		_markingsStruct._markings = &((*_pMainMarkings)[0]);
 
-	addSearchHitCount(count, isMatchLines);
+	addSearchHitCount(count, searchedCount, isMatchLines);
 	_scintView.execute(SCI_SETSEL, 0, 0);
 
 	_scintView.execute(SCI_SETLEXER, SCLEX_SEARCHRESULT);
