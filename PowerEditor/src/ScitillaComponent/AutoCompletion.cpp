@@ -327,23 +327,41 @@ bool AutoCompletion::showWordComplete(bool autoInsert)
 {
 	int curPos = int(_pEditView->execute(SCI_GETCURRENTPOS));
 	int startPos = int(_pEditView->execute(SCI_WORDSTARTPOSITION, curPos, true));
+	int endPos = int(_pEditView->execute(SCI_WORDENDPOSITION, curPos, true));
 
 	if (curPos == startPos)
 		return false;
 
 	const size_t bufSize = 256;
 	TCHAR beginChars[bufSize];
+	TCHAR allChars[bufSize];
 
 	size_t len = (curPos > startPos)?(curPos - startPos):(startPos - curPos);
 	if (len >= bufSize)
 		return false;
 
+	size_t lena = (endPos > startPos)?(endPos - startPos):(startPos - endPos);
+	if (lena >= bufSize)
+		return false;
+
+	_pEditView->getGenericText(beginChars, bufSize, startPos, curPos);
+	_pEditView->getGenericText(allChars, bufSize, startPos, endPos);
+
 	// Get word array
 	vector<generic_string> wordArray;
-	_pEditView->getGenericText(beginChars, bufSize, startPos, curPos);
-
 	getWordArray(wordArray, beginChars);
 
+	if (wordArray.size() == 0) return false;
+
+	// Erase word matching current word
+	for (size_t i = 0, wordArrayLen = wordArray.size(); i < wordArrayLen; ++i)
+	{
+		if (allChars == wordArray[i])
+		{
+			wordArray.erase (wordArray.begin() + i);
+			break;
+		}
+	}
 	if (wordArray.size() == 0) return false;
 
 	if (wordArray.size() == 1 && autoInsert)
@@ -367,6 +385,7 @@ bool AutoCompletion::showWordComplete(bool autoInsert)
 
 	_pEditView->execute(SCI_AUTOCSETSEPARATOR, WPARAM(' '));
 	_pEditView->execute(SCI_AUTOCSETIGNORECASE, _ignoreCase);
+	_pEditView->execute(SCI_AUTOCSETDROPRESTOFWORD, true); // <=== later: in settings if needed.
 	_pEditView->showAutoComletion(curPos - startPos, words.c_str());
 	return true;
 }
