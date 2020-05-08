@@ -2324,7 +2324,8 @@ void FindReplaceDlg::findAllIn(InWhat op)
 	if (!_pFinder)
 	{
 		_pFinder = new Finder();
-		_pFinder->init(_hInst, _hSelf, _ppEditView);
+//		_pFinder->init(_hInst, _hSelf, _ppEditView);
+		_pFinder->init(_hInst, (*_ppEditView)->getHSelf(), _ppEditView);
 		_pFinder->setVolatiled(false);
 		
 		tTbData	data = {0};
@@ -2983,12 +2984,12 @@ void FindReplaceDlg::setFindInFilesDirFilter(const TCHAR *dir, const TCHAR *filt
 {
 	if (dir)
 	{
-		_options._directory = dir;
+		_env->_directory = dir;
 		::SetDlgItemText(_hSelf, IDD_FINDINFILES_DIR_COMBO, dir);
 	}
 	if (filters)
 	{
-		_options._filters = filters;
+		_env->_filters = filters;
 		::SetDlgItemText(_hSelf, IDD_FINDINFILES_FILTERS_COMBO, filters);
 	}
 }
