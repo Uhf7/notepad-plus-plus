@@ -2375,9 +2375,12 @@ void FindReplaceDlg::findAllIn(InWhat op)
 		_pFinder->_scintView.setMakerStyle(FOLDER_STYLE_SIMPLE);
 
 		_pFinder->_scintView.display();
-		_pFinder->display();
+//		_pFinder->display(); // does nothing
+
+		// Hide find results while searching ...
 		::SendMessage(_hParent, NPPM_DMMHIDE, 0, reinterpret_cast<LPARAM>(_pFinder->getHSelf()));
 		::UpdateWindow(_hParent);
+
 		justCreated = true;
 	}
 	_pFinder->setFinderStyle();
