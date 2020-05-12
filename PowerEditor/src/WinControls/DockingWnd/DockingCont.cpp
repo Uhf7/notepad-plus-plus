@@ -1192,10 +1192,6 @@ int DockingCont::hideToolbar(tTbData *pTbData, BOOL hideClient)
 
 		if (iItemCnt != 0)
 		{
-			TCITEM		tcItem = {0};
-
-			tcItem.mask	= TCIF_PARAM;
-
 			if (iItem == iItemCnt)
 			{
 				iItem--;
