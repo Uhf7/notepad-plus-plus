@@ -62,6 +62,7 @@
 #define TOOLBAR 0x02
 
 #define URL_REG_EXPR "[A-Za-z]+://[A-Za-z0-9_\\-\\+~.:?&@=/%#,;\\{\\}\\(\\)\\[\\]\\|\\*\\!\\\\]+"
+#define URL_INDIC 8
 
 enum FileTransferMode {
 	TransferClone		= 0x01,
@@ -498,7 +499,7 @@ private:
 	int findMachedBracePos(size_t startPos, size_t endPos, char targetSymbol, char matchedSymbol);
 	void maintainIndentation(TCHAR ch);
 
-	void addHotSpot();
+	void addHotSpot(ScintillaEditView* view = NULL);
 
     void bookmarkAdd(int lineno) const
 	{
