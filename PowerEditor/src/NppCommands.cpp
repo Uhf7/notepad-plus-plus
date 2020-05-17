@@ -2165,7 +2165,6 @@ void Notepad_plus::command(int id)
 			break;
 		}
 
-		case IDM_FORMAT_ANSI :
 		case IDM_FORMAT_UTF_8 :
 		case IDM_FORMAT_UCS_2BE :
 		case IDM_FORMAT_UCS_2LE :
@@ -2178,7 +2177,7 @@ void Notepad_plus::command(int id)
 			switch (id)
 			{
 				case IDM_FORMAT_AS_UTF_8:
-					shoulBeDirty = buf->getUnicodeMode() != uni8Bit;
+					shoulBeDirty = buf->getUnicodeMode() != uniCookie;
 					um = uniCookie;
 					break;
 
@@ -2193,10 +2192,6 @@ void Notepad_plus::command(int id)
 				case IDM_FORMAT_UCS_2LE:
 					um = uni16LE;
 					break;
-
-				default : // IDM_FORMAT_ANSI
-					shoulBeDirty = buf->getUnicodeMode() != uniCookie;
-					um = uni8Bit;
 			}
 
 			if (buf->getEncoding() != -1)
@@ -2235,25 +2230,19 @@ void Notepad_plus::command(int id)
 				}
 
 				buf->setEncoding(-1);
-
-				if (um == uni8Bit)
-					_pEditView->execute(SCI_SETCODEPAGE, CP_ACP);
-				else
-					buf->setUnicodeMode(um);
 				fileReload();
 			}
-			else
+
+			if (buf->getUnicodeMode() != um)
 			{
-				if (buf->getUnicodeMode() != um)
-				{
-					buf->setUnicodeMode(um);
-					if (shoulBeDirty)
+				buf->setUnicodeMode(um);
+				if (shoulBeDirty)
 						buf->setDirty(true);
-				}
 			}
 			break;
 		}
 
+		case IDM_FORMAT_ANSI :
         case IDM_FORMAT_WIN_1250 :
         case IDM_FORMAT_WIN_1251 :
         case IDM_FORMAT_WIN_1252 :
@@ -2301,14 +2290,17 @@ void Notepad_plus::command(int id)
         case IDM_FORMAT_KOI8U_CYRILLIC :
         case IDM_FORMAT_KOI8R_CYRILLIC :
         {
-			int index = id - IDM_FORMAT_ENCODE;
-
-			EncodingMapper& em = EncodingMapper::getInstance();
-			int encoding = em.getEncodingFromIndex(index);
-			if (encoding == -1)
+			int encoding = 0;
+			if (id != IDM_FORMAT_ANSI)
 			{
-				//printStr(TEXT("Encoding problem. Command is not added in encoding_table?"));
-				return;
+				int index = id - IDM_FORMAT_ENCODE;
+				EncodingMapper& em = EncodingMapper::getInstance();
+				encoding = em.getEncodingFromIndex(index);
+				if (encoding == -1)
+				{
+					//printStr(TEXT("Encoding problem. Command is not added in encoding_table?"));
+					return;
+				}
 			}
 
             Buffer* buf = _pEditView->getCurrentBuffer();

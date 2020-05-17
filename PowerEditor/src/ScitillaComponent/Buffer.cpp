@@ -646,9 +646,6 @@ BufferID FileManager::loadFile(const TCHAR * filename, Document doc, int encodin
 		++_nbBufs;
 		Buffer* buf = _buffers.at(_nbBufs - 1);
 
-		// restore the encoding (ANSI based) while opening the existing file
-		buf->setEncoding(-1);
-
 		// if no file extension, and the language has been detected,  we use the detected value
 		if ((buf->getLangType() == L_TEXT) && (loadedFileFormat._language != L_TEXT))
 			buf->setLangType(loadedFileFormat._language);
@@ -703,9 +700,13 @@ void FileManager::setLoadedBufferEncodingAndEol(Buffer* buf, const Utf8_16_Read&
 		const NewDocDefaultSettings & ndds = (nppParamInst.getNppGUI()).getNewDocDefaultSettings();
 
 		UniMode um = UnicodeConvertor.getEncoding();
-		if (um == uni7Bit)
-			um = (ndds._openAnsiAsUtf8) ? uniCookie : uni8Bit;
-
+		int enc = -1;
+		if ((um == uni7Bit) || (um == uni8Bit))
+		{
+			if (!ndds._openAnsiAsUtf8) enc = 0;
+			um = uniCookie;
+		}
+		buf->setEncoding(enc);
 		buf->setUnicodeMode(um);
 	}
 	else
@@ -1331,9 +1332,6 @@ bool FileManager::loadFileData(Document doc, const TCHAR * filename, char* data,
 		_pscratchTilla->execute(SCI_SETLEXERLANGUAGE, 0, reinterpret_cast<LPARAM>(pName));
 	}
 
-	if (fileFormat._encoding != -1)
-		_pscratchTilla->execute(SCI_SETCODEPAGE, SC_CP_UTF8);
-
 	bool success = true;
 	EolType format = EolType::unknown;
 	__try
@@ -1362,10 +1360,18 @@ bool FileManager::loadFileData(Document doc, const TCHAR * filename, char* data,
                     // and the document will be interpreted as UTF
 					fileFormat._encoding = -1;
 				}
-				else if (fileFormat._encoding == -1)
+				else if (fileFormat._encoding == -2)
 				{
 					if (NppParameters::getInstance().getNppGUI()._detectEncoding)
+					{
 						fileFormat._encoding = detectCodepage(data, lenFile);
+					}
+					else
+					{
+						NppParameters& nppParamInst = NppParameters::getInstance();
+						const NewDocDefaultSettings & ndds = (nppParamInst.getNppGUI()).getNewDocDefaultSettings();
+						fileFormat._encoding = ndds._codepage;
+					}
                 }
 
 				if (fileFormat._language == L_TEXT)
@@ -1377,7 +1383,7 @@ bool FileManager::loadFileData(Document doc, const TCHAR * filename, char* data,
                 isFirstTime = false;
             }
 
-			if (fileFormat._encoding != -1)
+			if (fileFormat._encoding >= 0)
 			{
 				if (fileFormat._encoding == SC_CP_UTF8)
 				{

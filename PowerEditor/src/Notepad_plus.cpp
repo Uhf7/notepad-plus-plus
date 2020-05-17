@@ -1096,8 +1096,6 @@ bool Notepad_plus::replaceInOpenedFiles()
 			if (pBuf->isReadOnly())
 				continue;
 			_invisibleEditView.execute(SCI_SETDOCPOINTER, 0, pBuf->getDocument());
-			UINT cp = static_cast<UINT>(_invisibleEditView.execute(SCI_GETCODEPAGE));
-			_invisibleEditView.execute(SCI_SETCODEPAGE, pBuf->getUnicodeMode() == uni8Bit ? cp : SC_CP_UTF8);
 			_invisibleEditView.setCurrentBuffer(pBuf);
 		    _invisibleEditView.execute(SCI_BEGINUNDOACTION);
 			nbTotal += _findReplaceDlg.processAll(ProcessReplaceAll, FindReplaceDlg::_env, isEntireDoc);
@@ -1113,8 +1111,6 @@ bool Notepad_plus::replaceInOpenedFiles()
 			if (pBuf->isReadOnly())
 				continue;
 			_invisibleEditView.execute(SCI_SETDOCPOINTER, 0, pBuf->getDocument());
-			UINT cp = static_cast<UINT>(_invisibleEditView.execute(SCI_GETCODEPAGE));
-			_invisibleEditView.execute(SCI_SETCODEPAGE, pBuf->getUnicodeMode() == uni8Bit ? cp : SC_CP_UTF8);
 			_invisibleEditView.setCurrentBuffer(pBuf);
 		    _invisibleEditView.execute(SCI_BEGINUNDOACTION);
 			nbTotal += _findReplaceDlg.processAll(ProcessReplaceAll, FindReplaceDlg::_env, isEntireDoc);
@@ -1564,8 +1560,6 @@ bool Notepad_plus::replaceInFiles()
 		{
 			Buffer * pBuf = MainFileManager.getBufferByID(id);
 			_invisibleEditView.execute(SCI_SETDOCPOINTER, 0, pBuf->getDocument());
-			auto cp = _invisibleEditView.execute(SCI_GETCODEPAGE);
-			_invisibleEditView.execute(SCI_SETCODEPAGE, pBuf->getUnicodeMode() == uni8Bit ? cp : SC_CP_UTF8);
 			_invisibleEditView.setCurrentBuffer(pBuf);
 
 			FindersInfo findersInfo;
@@ -1660,9 +1654,6 @@ bool Notepad_plus::findInFinderFiles(FindersInfo *findInFolderInfo)
 		{
 			Buffer * pBuf = MainFileManager.getBufferByID(id);
 			_invisibleEditView.execute(SCI_SETDOCPOINTER, 0, pBuf->getDocument());
-			auto cp = _invisibleEditView.execute(SCI_GETCODEPAGE);
-			_invisibleEditView.execute(SCI_SETCODEPAGE, pBuf->getUnicodeMode() == uni8Bit ? cp : SC_CP_UTF8);
-
 			findInFolderInfo->_pFileName = fileNames.at(i).c_str();
 			nbTotal += _findReplaceDlg.processAll(ProcessFindInFinder, &(findInFolderInfo->_findOption), true, findInFolderInfo);
 			if (closeBuf)
@@ -1771,8 +1762,6 @@ bool Notepad_plus::findInFiles()
 		{
 			Buffer * pBuf = MainFileManager.getBufferByID(id);
 			_invisibleEditView.execute(SCI_SETDOCPOINTER, 0, pBuf->getDocument());
-			auto cp = _invisibleEditView.execute(SCI_GETCODEPAGE);
-			_invisibleEditView.execute(SCI_SETCODEPAGE, pBuf->getUnicodeMode() == uni8Bit ? cp : SC_CP_UTF8);
 			FindersInfo findersInfo;
 			findersInfo._pFileName = fileNames.at(i).c_str();
 			nbTotal += _findReplaceDlg.processAll(ProcessFindAll, FindReplaceDlg::_env, true, &findersInfo);
@@ -1825,8 +1814,6 @@ bool Notepad_plus::findInOpenedFiles()
 	    {
 			pBuf = MainFileManager.getBufferByID(_mainDocTab.getBufferByIndex(i));
 			_invisibleEditView.execute(SCI_SETDOCPOINTER, 0, pBuf->getDocument());
-			auto cp = _invisibleEditView.execute(SCI_GETCODEPAGE);
-			_invisibleEditView.execute(SCI_SETCODEPAGE, pBuf->getUnicodeMode() == uni8Bit ? cp : SC_CP_UTF8);
 			FindersInfo findersInfo;
 			findersInfo._pFileName = pBuf->getFullPathName();
 			nbTotal += _findReplaceDlg.processAll(ProcessFindAll, FindReplaceDlg::_env, isEntireDoc, &findersInfo);
@@ -1845,8 +1832,6 @@ bool Notepad_plus::findInOpenedFiles()
 				continue;  // clone was already searched in main; skip re-searching in sub
 			}
 			_invisibleEditView.execute(SCI_SETDOCPOINTER, 0, pBuf->getDocument());
-			auto cp = _invisibleEditView.execute(SCI_GETCODEPAGE);
-			_invisibleEditView.execute(SCI_SETCODEPAGE, pBuf->getUnicodeMode() == uni8Bit ? cp : SC_CP_UTF8);
 			FindersInfo findersInfo;
 			findersInfo._pFileName = pBuf->getFullPathName();
 			nbTotal += _findReplaceDlg.processAll(ProcessFindAll, FindReplaceDlg::_env, isEntireDoc, &findersInfo);
@@ -2438,7 +2423,11 @@ void Notepad_plus::setUniModeText()
 
 	generic_string uniModeTextString;
 
-	if (encoding == -1)
+    if (encoding == 0)
+    {
+		uniModeTextString = TEXT("ANSI");
+    }
+	else if (encoding == -1)
 	{
 		switch (um)
 		{
@@ -2455,7 +2444,7 @@ void Notepad_plus::setUniModeText()
 			case uniCookie:
 				uniModeTextString = TEXT("UTF-8"); break;
 			default :
-				uniModeTextString = TEXT("ANSI");
+				uniModeTextString = TEXT("8bit");
 		}
 	}
 	else
@@ -3931,11 +3920,10 @@ void Notepad_plus::checkUnicodeMenuItems() const
 		case uniUTF8   : id = IDM_FORMAT_UTF_8; break;
 		case uni16BE   : id = IDM_FORMAT_UCS_2BE; break;
 		case uni16LE   : id = IDM_FORMAT_UCS_2LE; break;
-		case uniCookie : id = IDM_FORMAT_AS_UTF_8; break;
-		case uni8Bit   : id = IDM_FORMAT_ANSI; break;
+		case uniCookie : id = encoding ? IDM_FORMAT_AS_UTF_8 : IDM_FORMAT_ANSI; break;
 	}
 
-	if (encoding == -1)
+	if ((encoding == 0) || (encoding == -1))
 	{
 		// Uncheck all in the sub encoding menu
         HMENU _formatMenuHandle = ::GetSubMenu(_mainMenuHandle, MENUINDEX_FORMAT);
