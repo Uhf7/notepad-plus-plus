@@ -230,15 +230,15 @@ void DocumentMap::scrollMap()
 
 		// Get bottom position of orange marker window
 		LRESULT lowerY = 0;
+		LRESULT lineHeightMapView  = _pMapView->execute(SCI_TEXTHEIGHT, 0);
 		if (not (*_ppEditView)->isWrap())
 		{ // not wrapped: mimic height of edit view
 			LRESULT lineHeightEditView = (*_ppEditView)->execute(SCI_TEXTHEIGHT, 0);
-			LRESULT lineHeightMapView  = _pMapView->execute(SCI_TEXTHEIGHT, 0);
 			lowerY = higherY + lineHeightMapView * (rcEditView.bottom - rcEditView.top) / lineHeightEditView;
 		}
 		else
 		{ // wrapped: ask Scintilla, since in the map view the current range of edit view might be wrapped differently
-			lowerY = _pMapView->execute(SCI_POINTYFROMPOSITION, 0, lowerPos);
+			lowerY = _pMapView->execute(SCI_POINTYFROMPOSITION, 0, lowerPos) + lineHeightMapView;
 		}
 
 		//
