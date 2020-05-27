@@ -835,6 +835,7 @@ struct NppGUI final
 	bool _backSlashIsEscapeCharacterForSql = true;
 	bool _stopFillingFindField = false;
 	bool _monospacedFontFindDlg = false;
+	bool _useDirectWrite = false;
 	bool _isWordCharDefault = true;
 	std::string _customWordChars;
 
