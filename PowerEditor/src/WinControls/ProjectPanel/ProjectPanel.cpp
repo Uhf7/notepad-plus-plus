@@ -458,6 +458,9 @@ bool ProjectPanel::writeWorkSpace(TCHAR *projectFileName)
     if (!tvRoot)
       return false;
 
+	TCHAR * fileName = PathFindFileName(projectFileName);
+	_treeView.renameItem(tvRoot, fileName);
+
     for (HTREEITEM tvProj = _treeView.getChildFrom(tvRoot);
         tvProj != NULL;
         tvProj = _treeView.getNextSibling(tvProj))
@@ -1231,6 +1234,7 @@ void ProjectPanel::setFileExtFilter(FileDialog & fDlg)
 			workspaceExt += TEXT(".");
 		workspaceExt += ext;
 		fDlg.setExtFilter(TEXT("Workspace file"), workspaceExt.c_str(), NULL);
+		fDlg.setDefExt(ext);
 	}
 	fDlg.setExtFilter(TEXT("All types"), TEXT(".*"), NULL);
 }
