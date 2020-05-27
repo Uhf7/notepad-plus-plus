@@ -389,7 +389,7 @@ private:
                                               // then WM_ENDSESSION is send with wParam == FALSE
                                               // in this case this boolean is set true, so Notepad++ will quit and its current session will be saved 
 
-    bool _WorkspaceFileLoadedFromCommandLine = false;
+    bool _isWorkspaceFileLoadedFromCommandLine = false;
 
 	ScintillaCtrls _scintillaCtrls4Plugins;
 

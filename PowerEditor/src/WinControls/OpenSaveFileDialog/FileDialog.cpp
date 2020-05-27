@@ -164,6 +164,7 @@ TCHAR* FileDialog::doOpenSingleFileDlg()
 	::GetCurrentDirectory(MAX_PATH, dir);
 	NppParameters& params = NppParameters::getInstance();
 	_ofn.lpstrInitialDir = params.getWorkingDir();
+	_ofn.lpstrDefExt = _defExt.c_str();
 
 	_ofn.Flags |= OFN_FILEMUSTEXIST;
 
@@ -267,6 +268,7 @@ TCHAR * FileDialog::doSaveDlg()
 
 	NppParameters& params = NppParameters::getInstance();
 	_ofn.lpstrInitialDir = params.getWorkingDir();
+	_ofn.lpstrDefExt = _defExt.c_str();
 
 	_ofn.Flags |= OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY | OFN_ENABLESIZING;
 

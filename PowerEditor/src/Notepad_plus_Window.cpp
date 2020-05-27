@@ -245,7 +245,7 @@ void Notepad_plus_Window::init(HINSTANCE hInst, HWND parent, const TCHAR *cmdLin
 	{
 		_notepad_plus_plus_core.launchFileBrowser(fns, true);
 	}
-	else if (_notepad_plus_plus_core._WorkspaceFileLoadedFromCommandLine)
+	else if (_notepad_plus_plus_core._isWorkspaceFileLoadedFromCommandLine)
 	{
 		::SendMessage(_hSelf, WM_COMMAND, IDM_VIEW_PROJECT_PANEL_1, 0);
 	}
