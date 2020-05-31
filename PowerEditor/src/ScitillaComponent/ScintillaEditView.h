@@ -226,7 +226,12 @@ public:
 
 	LRESULT execute(UINT Msg, WPARAM wParam=0, LPARAM lParam=0) const {
 		try {
-			return _pScintillaFunc(_pScintillaPtr, Msg, wParam, lParam);
+			LRESULT r = _pScintillaFunc(_pScintillaPtr, Msg, wParam, lParam);
+			if ((Msg == SCI_SETCODEPAGE) || (Msg == SCI_SETDOCPOINTER))
+			{
+				execute(SCI_SETREPRESENTATION, (uptr_t)(char*)"\x7f", (sptr_t)(char*)"DEL");
+			}
+			return r;
 		}
 		catch (...)
 		{
