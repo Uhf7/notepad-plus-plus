@@ -694,16 +694,16 @@ bool FileManager::reloadBuffer(BufferID id)
 
 void FileManager::setLoadedBufferEncodingAndEol(Buffer* buf, const Utf8_16_Read& UnicodeConvertor, int encoding, EolType bkformat)
 {
-	if (encoding == -1)
+	if (encoding == ENC_UNICODE)
 	{
 		NppParameters& nppParamInst = NppParameters::getInstance();
 		const NewDocDefaultSettings & ndds = (nppParamInst.getNppGUI()).getNewDocDefaultSettings();
 
 		UniMode um = UnicodeConvertor.getEncoding();
-		int enc = -1;
+		int enc = ENC_UNICODE;
 		if ((um == uni7Bit) || (um == uni8Bit))
 		{
-			if (!ndds._openAnsiAsUtf8) enc = 0;
+			if (!ndds._openAnsiAsUtf8) enc = ENC_ANSI;
 			um = uniCookie;
 		}
 		buf->setEncoding(enc);
@@ -712,7 +712,7 @@ void FileManager::setLoadedBufferEncodingAndEol(Buffer* buf, const Utf8_16_Read&
 	else
 	{
 		// Test if encoding is set to UTF8 w/o BOM (usually for utf8 indicator of xml or html)
-		buf->setEncoding((encoding == SC_CP_UTF8)?-1:encoding);
+		buf->setEncoding((encoding == SC_CP_UTF8) ? ENC_UNICODE : encoding);
 		buf->setUnicodeMode(uniCookie);
 	}
 
@@ -1363,9 +1363,9 @@ bool FileManager::loadFileData(Document doc, const TCHAR * filename, char* data,
                 {
                     // if file contains any BOM, then encoding will be erased,
                     // and the document will be interpreted as UTF
-					fileFormat._encoding = -1;
+					fileFormat._encoding = ENC_UNICODE;
 				}
-				else if (fileFormat._encoding == -2)
+				else if (fileFormat._encoding == ENC_NEW)
 				{
 					if (NppParameters::getInstance().getNppGUI()._detectEncoding)
 					{
@@ -1388,7 +1388,7 @@ bool FileManager::loadFileData(Document doc, const TCHAR * filename, char* data,
                 isFirstTime = false;
             }
 
-			if (fileFormat._encoding >= 0)
+			if (fileFormat._encoding >= ENC_ANSI)
 			{
 				if (fileFormat._encoding == SC_CP_UTF8)
 				{

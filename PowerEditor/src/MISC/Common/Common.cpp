@@ -1327,3 +1327,45 @@ void getFilesInFolder(std::vector<generic_string>& files, const generic_string& 
 	::FindClose(hFindFile);
 }
 
+bool utf8toWideChar (char * ptrUtf8, int * lenUtf8, TCHAR * WideChar)
+{
+	if ((ptrUtf8 [0] & 0x80) == 0x00)
+	{
+		*WideChar = ptrUtf8 [0];
+		*lenUtf8 = 1;
+		return true;
+	}
+
+	if ((ptrUtf8 [0] & 0xe0) == 0xc0)
+	{
+		if ((ptrUtf8 [1] & 0xc0) == 0x80)
+		{
+			*WideChar = ((ptrUtf8 [0] & 0x1f) << 6) | (ptrUtf8 [1] & 0x3f);
+		*lenUtf8 = 2;
+		return true;
+		}
+	}
+
+	if ((ptrUtf8 [0] & 0xf0) == 0xe0)
+	{
+		if (((ptrUtf8 [1] & 0xc0) == 0x80) && ((ptrUtf8 [2] & 0xc0) == 0x80))
+		{
+			*WideChar = ((ptrUtf8 [0] & 0x1f) << 12) | ((ptrUtf8 [1] & 0x3f) << 6) | (ptrUtf8 [2] & 0x3f);
+		*lenUtf8 = 3;
+		return true;
+		}
+	}
+
+	if ((ptrUtf8 [0] & 0xf8) == 0xf0)
+	{
+		if (((ptrUtf8 [1] & 0xc0) == 0x80) && ((ptrUtf8 [2] & 0xc0) == 0x80) && ((ptrUtf8 [3] & 0xc0) == 0x80))
+		{
+			*WideChar = ((ptrUtf8 [0] & 0x1f) << 18) | ((ptrUtf8 [1] & 0x3f) << 12) | ((ptrUtf8 [2] & 0x3f) << 6) | (ptrUtf8 [3] & 0x3f);
+		*lenUtf8 = 4;
+		return true;
+		}
+	}
+	*WideChar = ptrUtf8 [0];
+	*lenUtf8 = 1;
+	return false;
+}

@@ -2421,11 +2421,11 @@ void Notepad_plus::setUniModeText()
 
 	generic_string uniModeTextString;
 
-    if (encoding == 0)
+    if (encoding == ENC_ANSI)
     {
 		uniModeTextString = TEXT("ANSI");
     }
-	else if (encoding == -1)
+	else if (encoding == ENC_UNICODE)
 	{
 		switch (um)
 		{
@@ -2464,7 +2464,6 @@ void Notepad_plus::setUniModeText()
 	_statusBar.setText(uniModeTextString.c_str(), STATUSBAR_UNICODE_TYPE);
 }
 
-
 void Notepad_plus::addHotSpot(ScintillaEditView* view)
 {
 	ScintillaEditView* pView = view ? view : _pEditView;
@@ -2497,6 +2496,40 @@ void Notepad_plus::addHotSpot(ScintillaEditView* view)
 		pView->execute(SCI_SETTARGETRANGE, posFound + foundTextLen, endPos);
 		posFound = static_cast<int32_t>(pView->execute(SCI_SEARCHINTARGET, strlen(URL_REG_EXPR), reinterpret_cast<LPARAM>(URL_REG_EXPR)));
 	}
+
+	// Mark all characters which cannot be stored with current encoding setting:
+
+	pView->execute(SCI_INDICSETSTYLE,  ENC_INDIC, INDIC_FULLBOX);
+	pView->execute(SCI_INDICSETFORE,   ENC_INDIC, RGB(255, 255, 0));
+	pView->execute(SCI_INDICSETALPHA,  ENC_INDIC, 128);
+	pView->execute(SCI_SETINDICATORCURRENT, ENC_INDIC);
+	pView->execute(SCI_INDICATORCLEARRANGE, startPos, endPos - startPos);
+	int encoding = pView->getCurrentBuffer()->getEncoding();
+
+	char* bufUtf8 = new char[endPos - startPos + 1];
+	pView->getText(bufUtf8, startPos, endPos);
+	int idxUtf8 = startPos;
+	while (idxUtf8 < endPos)
+	{
+		TCHAR wc;
+		int lenUtf8;
+		bool ok = utf8toWideChar (& bufUtf8 [idxUtf8 - startPos], & lenUtf8, & wc);
+		if (ok && (encoding >= 0))
+		{
+			char bufEnc [8];
+			BOOL defCharUsed = FALSE;
+			int res = WideCharToMultiByte (encoding, WC_NO_BEST_FIT_CHARS, & wc, 1, bufEnc, _countof (bufEnc), NULL, & defCharUsed);
+			if ((res < 1) || defCharUsed)
+				ok = false;
+		}
+		if (!ok)
+		{
+			pView->execute(SCI_SETINDICATORVALUE, 0);
+			pView->execute(SCI_INDICATORFILLRANGE, idxUtf8, lenUtf8);
+		}
+		idxUtf8 += lenUtf8;
+	}
+	delete [] bufUtf8;
 }
 
 bool Notepad_plus::isConditionExprLine(int lineNumber)
@@ -3921,7 +3954,7 @@ void Notepad_plus::checkUnicodeMenuItems() const
 		case uniCookie : id = encoding ? IDM_FORMAT_AS_UTF_8 : IDM_FORMAT_ANSI; break;
 	}
 
-	if ((encoding == 0) || (encoding == -1))
+	if ((encoding == ENC_ANSI) || (encoding == ENC_UNICODE))
 	{
 		// Uncheck all in the sub encoding menu
         HMENU _formatMenuHandle = ::GetSubMenu(_mainMenuHandle, MENUINDEX_FORMAT);
