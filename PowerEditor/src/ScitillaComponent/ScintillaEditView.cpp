@@ -3681,3 +3681,263 @@ void ScintillaEditView::getFoldColor(COLORREF& fgColor, COLORREF& bgColor, COLOR
 		activeFgColor = style._fgColor;
 	}
 }
+
+void ScintillaEditView::reinterpretAsEncoding (int encodingTo)
+{
+	Buffer* buf = getCurrentBuffer();
+	int encodingFrom = buf->getEncoding();
+	if (encodingFrom == encodingTo) return;
+
+	auto lineCount = execute(SCI_GETLINECOUNT);
+	int line = 0;
+	while (line < lineCount)
+	{
+		auto lineLen = execute(SCI_LINELENGTH, line);
+		char* lineOld = new char[lineLen];
+		generic_string lineNew;
+		execute(SCI_GETLINE, line, reinterpret_cast<LPARAM>(lineOld));
+		int idxOld = 0;
+		while (idxOld < lineLen)
+		{
+			TCHAR wc;
+			int lenUtf8;
+			bool ok = utf8toWideChar(& lineOld [idxOld], & lenUtf8, & wc);
+			char bufFrom [8];
+			int lenFrom = 0;
+			if (ok)
+			{
+				if (encodingFrom >= 0)
+				{ // check whether character is valid in original encoding
+					BOOL defCharUsed = FALSE;
+					lenFrom = WideCharToMultiByte (encodingFrom, WC_NO_BEST_FIT_CHARS, & wc, 1, bufFrom, _countof (bufFrom), NULL, & defCharUsed);
+					if ((lenFrom < 1) || defCharUsed)
+						ok = false; // simply keep original UTF-8 character it in new encoding
+				}
+				else
+				{ // strip
+					if (IsDBCSLeadByteEx(encodingTo, lineOld [idxOld]))
+					{
+						lenUtf8 = 2;
+					}
+					else
+					{
+						lenUtf8 = 1;
+					}
+					lenFrom = lenUtf8;
+					for (int i = 0; i < lenFrom; i++)
+						bufFrom [i] = lineOld[idxOld+i];
+				}
+			}
+			else
+			{ // invalid utf-8 char in original buffer --> strip ####### COULD BE A VALID DBCS CHARACTER HERE. CHECK LEAD BYTE AND MAKE IT LEN 2 if....
+				if (IsDBCSLeadByteEx(encodingTo, lineOld [idxOld]))
+				{
+					lenUtf8 = 2;
+					lenFrom = lenUtf8;
+				}
+				else
+				{
+					lenUtf8 = 1;
+					lenFrom = lenUtf8;
+				}
+				for (int i = 0; i < lenFrom; i++)
+				{
+					bufFrom [i] = lineOld[idxOld+i];
+				}
+				ok = true;
+			}
+			if (ok)
+			{ // Never feed single DBCS lead bytes to MultiByteToWideChar
+				if ((lenFrom == 1) && IsDBCSLeadByteEx(encodingTo, bufFrom [0]))
+					ok = false;
+			}
+			if (ok)
+			{
+				TCHAR bufEnc [8];
+				int lenEnc = MultiByteToWideChar(encodingTo, 0, bufFrom, lenFrom, bufEnc, _countof (bufEnc));
+				ok = (lenEnc == 1);
+				if (ok)
+				{
+					char bufVerify [8];
+					BOOL defCharUsed = FALSE;
+					int lenVerify = WideCharToMultiByte(encodingTo, WC_NO_BEST_FIT_CHARS, bufEnc, 1, bufVerify, _countof (bufVerify), NULL, & defCharUsed);
+					ok = (lenVerify == lenFrom);
+					if (ok)
+					{
+						for (int i = 0; i < lenVerify; i++)
+						{
+							if (bufFrom [i] != bufVerify [i])
+							{
+								ok = false;
+								break;
+							}
+						}
+					}
+				}
+				if (ok)
+					wc = bufEnc[0];
+			}
+			lineNew = lineNew + wc;
+			idxOld += lenUtf8;
+		}
+		// New line is complete now, encode it to UTF8 and replace it.
+		// ### Could compare before for modifications, to save undo space.
+		char * bufNew = new char[lineNew.length() * 4];
+		int lenNew = WideCharToMultiByte(CP_UTF8, 0, lineNew.c_str(), lineNew.length(), bufNew, lineNew.length() * 4, NULL, NULL);
+		auto a = execute(SCI_POSITIONFROMLINE, line);
+		auto b = execute(SCI_POSITIONFROMLINE, line + 1);
+		execute(SCI_SETTARGETRANGE, a, b);
+		execute(SCI_REPLACETARGET, lenNew, reinterpret_cast<LPARAM>(bufNew));
+		delete [] bufNew;
+		line++;
+	}
+	buf->setEncoding(encodingTo);
+	buf->setUnicodeMode(uniCookie);
+}
+
+char wideCharToSingleChar(TCHAR wc, int encoding)
+{
+	BOOL defCharUsed = FALSE;
+	char m [8];
+	int l = WideCharToMultiByte (encoding, WC_NO_BEST_FIT_CHARS, & wc, 1, m, _countof (m), NULL, & defCharUsed);
+	if ((l == 1) && (! defCharUsed)) return m [0];
+	return 0;
+}
+
+void ScintillaEditView::reinterpretAsUtf8()
+{
+	Buffer* buf = getCurrentBuffer();
+	int encodingFrom = buf->getEncoding();
+	if (encodingFrom == -1) return;
+
+	auto lineCount = execute(SCI_GETLINECOUNT);
+	int line = 0;
+	while (line < lineCount)
+	{
+		auto lineLen = execute(SCI_LINELENGTH, line);
+		char* lineOld = new char[lineLen];
+		std::basic_string<char> lineNew;
+		execute(SCI_GETLINE, line, reinterpret_cast<LPARAM>(lineOld));
+		int idxOld = 0;
+		typedef enum:int {sts_normal = 0, sts_eatUtf8_1, sts_eatUtf8_2, sts_eatUtf8_3} state_type;
+		state_type state = sts_normal;
+		TCHAR composedChar = 0;
+		int composedIdx;
+		int composedLen;
+		TCHAR wc1;
+		while (idxOld < lineLen)
+		{
+			switch (state)
+			{
+				case sts_normal:
+				{
+					bool ok = utf8toWideChar(&lineOld[idxOld], & composedLen, & wc1);
+					if (ok)
+					{
+						char c [8];
+						BOOL defCharUsed = FALSE;
+						int lc = WideCharToMultiByte(encodingFrom, WC_NO_BEST_FIT_CHARS, & wc1, 1, c, _countof(c), NULL, & defCharUsed);
+						if ((lc == 1) & (!defCharUsed))
+						{
+							if ((c [0] & 0xe0) == 0xc0)
+							{
+								state = sts_eatUtf8_1;
+								composedChar = c [0] & 0x1f;
+								composedIdx = idxOld;
+								idxOld += composedLen;
+							}
+							else if ((c [0] & 0xf0) == 0xe0)
+							{
+								state = sts_eatUtf8_2;
+								composedChar = c [0] & 0x0f;
+								composedIdx = idxOld;
+								idxOld += composedLen;
+							}
+							else if ((c [0] & 0xf8) == 0xf0)
+							{
+								state = sts_eatUtf8_3;
+								composedChar = c [0] & 0x7;
+								composedIdx = idxOld;
+								idxOld += composedLen;
+							}
+						}
+						if (state == sts_normal)
+						{
+							if (defCharUsed)
+							{ // this was a "yellow" character, leave it as is
+								for (int i = 0; i < composedLen; i++)
+									lineNew = lineNew + lineOld[idxOld++];
+							}
+							else
+							{
+								for (int i = 0; i < lc; i++) // ############ WRONG ###
+									lineNew = lineNew + c[i];
+								idxOld += composedLen;
+							}
+						}
+					}
+					else
+					{
+						lineNew += lineOld[idxOld];
+						idxOld++;
+					}
+					break;
+				}
+				case sts_eatUtf8_1:
+				case sts_eatUtf8_2:
+				case sts_eatUtf8_3:
+				{
+					TCHAR wc;
+					int lenUtf8;
+					bool ok = utf8toWideChar(&lineOld[idxOld], & lenUtf8, & wc);
+					if (ok)
+					{
+						char c = wideCharToSingleChar(wc, encodingFrom);
+						if ((c & 0xc0) == 0x80)
+						{
+							composedChar = (composedChar << 6) + (c & 0x3f);
+							idxOld += lenUtf8;
+							state = static_cast<state_type>(static_cast<int>(state) - 1);
+							if (state == sts_normal)
+							{
+								char enc [8];
+								int lenc = WideCharToMultiByte (CP_UTF8, 0, & composedChar, 1, enc, _countof(enc), NULL, NULL);
+								for (int i = 0; i < lenc; i++)
+									lineNew += enc[i];
+							}
+						}
+						else
+						{
+							char encc [8];
+							BOOL defCharUsed = FALSE;
+							int lencc = WideCharToMultiByte (encodingFrom, WC_NO_BEST_FIT_CHARS, & wc1, 1, encc, _countof(encc), NULL, & defCharUsed);
+							if (defCharUsed)
+							{ // this was a "yellow" character, leave it as is
+								idxOld = composedIdx;
+								for (int i = 0; i < composedLen; i++)
+									lineNew = lineNew + lineOld[idxOld++];
+							}
+							else
+							{
+								for (int i = 0; i < lencc; i++)
+									lineNew = lineNew + encc[i];
+								idxOld = composedIdx + composedLen;
+							}
+							state = sts_normal;
+						}
+					}
+					break;
+				}
+			}
+		}
+		// New line is complete now, encode it to UTF8 and replace it.
+		// ### Could compare before for modifications, to save undo space.
+		auto a = execute(SCI_POSITIONFROMLINE, line);
+		auto b = execute(SCI_POSITIONFROMLINE, line + 1);
+		execute(SCI_SETTARGETRANGE, a, b);
+		execute(SCI_REPLACETARGET, lineNew.length(), reinterpret_cast<LPARAM>(lineNew.c_str()));
+		line++;
+	}
+	buf->setEncoding(-1);
+	buf->setUnicodeMode(uniCookie);
+}

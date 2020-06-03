@@ -2173,10 +2173,9 @@ void Notepad_plus::command(int id)
 			break;
 		}
 
-		case IDM_FORMAT_UTF_8 :
 		case IDM_FORMAT_UCS_2BE :
 		case IDM_FORMAT_UCS_2LE :
-		case IDM_FORMAT_AS_UTF_8 :
+//		case IDM_FORMAT_AS_UTF_8 :
 		{
 			Buffer * buf = _pEditView->getCurrentBuffer();
 
@@ -2251,6 +2250,7 @@ void Notepad_plus::command(int id)
 		}
 
 		case IDM_FORMAT_ANSI :
+		case IDM_FORMAT_AS_UTF_8 :
         case IDM_FORMAT_WIN_1250 :
         case IDM_FORMAT_WIN_1251 :
         case IDM_FORMAT_WIN_1252 :
@@ -2299,7 +2299,11 @@ void Notepad_plus::command(int id)
         case IDM_FORMAT_KOI8R_CYRILLIC :
         {
 			int encodingTo = 0;
-			if (id != IDM_FORMAT_ANSI)
+			if (id == IDM_FORMAT_AS_UTF_8)
+			{
+				encodingTo = -1;
+			}
+			else if (id != IDM_FORMAT_ANSI)
 			{
 				int index = id - IDM_FORMAT_ENCODE;
 				EncodingMapper& em = EncodingMapper::getInstance();
@@ -2310,121 +2314,16 @@ void Notepad_plus::command(int id)
 					return;
 				}
 			}
-
-			Buffer* buf = _pEditView->getCurrentBuffer();
-			int encodingFrom = buf->getEncoding();
-
-			auto lineCount = _pEditView->execute(SCI_GETLINECOUNT);
-			int line = 0;
-			while (line < lineCount)
+			if (encodingTo == -1)
 			{
-				auto lineLen = _pEditView->execute(SCI_LINELENGTH, line);
-				char* lineOld = new char[lineLen];
-				generic_string lineNew;
-				_pEditView->execute(SCI_GETLINE, line, reinterpret_cast<LPARAM>(lineOld));
-				int idxOld = 0;
-				while (idxOld < lineLen)
-				{
-					TCHAR wc;
-					int lenUtf8;
-					bool ok = utf8toWideChar(&lineOld[idxOld], & lenUtf8, & wc);
-					char bufFrom [8];
-					int lenFrom = 0;
-					if (ok && (encodingFrom >= 0))
-					{ // check whether character is valid in original encoding
-						BOOL defCharUsed = FALSE;
-						lenFrom = WideCharToMultiByte (encodingFrom, WC_NO_BEST_FIT_CHARS, & wc, 1, bufFrom, _countof (bufFrom), NULL, & defCharUsed);
-						if ((lenFrom < 1) || defCharUsed)
-							ok = false;
-					}
-					if (ok)
-					{
-						if ((lenFrom == 1) && IsDBCSLeadByteEx(encodingTo, bufFrom [0]))
-							ok = false;
-					}
-					if (ok)
-					{ // character existed in original encoding, so try to reinterpret it with new encoding
-						TCHAR bufEnc [8];
-						int lenEnc = MultiByteToWideChar(encodingTo, 0, bufFrom, lenFrom, bufEnc, _countof (bufEnc));
-						ok = (lenEnc == 1);
-						if (ok)
-						{
-							char bufVerify [8];
-							BOOL defCharUsed = FALSE;
-							int lenVerify = WideCharToMultiByte(encodingTo, WC_NO_BEST_FIT_CHARS, bufEnc, 1, bufVerify, _countof (bufVerify), NULL, & defCharUsed);
-							ok = (lenVerify == lenFrom);
-							if (ok)
-							{
-								for (int i = 0; i < lenVerify; i++)
-								{
-									if (bufFrom [i] != bufVerify [i])
-									{
-										ok = false;
-										break;
-									}
-								}
-							}
-						}
-						if (ok)
-							wc = bufEnc[0];
-					}
-					lineNew = lineNew + wc;
-					idxOld += lenUtf8;
-				}
-				char * bufNew = new char[lineNew.length() * 4];
-				int lenNew = WideCharToMultiByte(CP_UTF8, 0, lineNew.c_str(), lineNew.length(), bufNew, lineNew.length() * 4, NULL, NULL);
-				auto a = _pEditView->execute(SCI_POSITIONFROMLINE, line);
-				auto b = _pEditView->execute(SCI_POSITIONFROMLINE, line + 1);
-				_pEditView->execute(SCI_SETTARGETRANGE, a, b);
-				_pEditView->execute(SCI_REPLACETARGET, lenNew, reinterpret_cast<LPARAM>(bufNew));
-				delete [] bufNew;
-				line++;
+				_pEditView->reinterpretAsUtf8();
 			}
-			buf->setEncoding(encodingTo);
-			buf->setUnicodeMode(uniCookie);
-
-if (GetTickCount() != 0) break; // suppress unreachable code warning
-
-            if (buf->isDirty())
-            {
-				generic_string warning, title;
-				int answer = _nativeLangSpeaker.messageBox("SaveCurrentModifWarning",
-					_pPublicInterface->getHSelf(),
-					TEXT("You should save the current modification.\rAll the saved modifications can not be undone.\r\rContinue?"),
-					TEXT("Save Current Modification"),
-					MB_YESNO);
-
-                if (answer == IDYES)
-                {
-                    fileSave();
-					_pEditView->execute(SCI_EMPTYUNDOBUFFER);
-                }
-                else
-                    return;
-            }
-
-            if (_pEditView->execute(SCI_CANUNDO) == TRUE)
-            {
-				generic_string msg, title;
-				int answer = _nativeLangSpeaker.messageBox("LoseUndoAbilityWarning",
-					_pPublicInterface->getHSelf(),
-					TEXT("You should save the current modification.\rAll the saved modifications can not be undone.\r\rContinue?"),
-					TEXT("Lose Undo Ability Waning"),
-					MB_YESNO);
-
-                if (answer != IDYES)
-                    return;
-            }
-
-            if (not buf->isDirty())
-            {
-				buf->setEncoding(encodingTo);
-				buf->setUnicodeMode(uniCookie);
-				fileReload();
-            }
+			else
+			{
+				_pEditView->reinterpretAsEncoding (encodingTo);
+			}
 			break;
 		}
-
 
 		case IDM_FORMAT_CONV2_ANSI:
 		case IDM_FORMAT_CONV2_AS_UTF_8:
