@@ -6046,10 +6046,9 @@ void Notepad_plus::launchFileBrowser(const vector<generic_string> & folders, boo
 
 void Notepad_plus::launchProjectPanel(int cmdID, ProjectPanel ** pProjPanel, int panelID)
 {
+	NppParameters& nppParam = NppParameters::getInstance();
 	if (!(*pProjPanel))
 	{
-		NppParameters& nppParam = NppParameters::getInstance();
-
 		(*pProjPanel) = new ProjectPanel;
 		(*pProjPanel)->init(_pPublicInterface->getHinst(), _pPublicInterface->getHSelf(), panelID);
 		(*pProjPanel)->setWorkSpaceFilePath(nppParam.getWorkSpaceFilePath(panelID));
@@ -6090,6 +6089,11 @@ void Notepad_plus::launchProjectPanel(int cmdID, ProjectPanel ** pProjPanel, int
 
 		(*pProjPanel)->setBackgroundColor(bgColor);
 		(*pProjPanel)->setForegroundColor(fgColor);
+	}
+	else
+	{
+		if ((*pProjPanel)->saveWorkspaceRequest())
+			(*pProjPanel)->openWorkSpace(nppParam.getWorkSpaceFilePath(panelID));
 	}
 	(*pProjPanel)->display();
 }
