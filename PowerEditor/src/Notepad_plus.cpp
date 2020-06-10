@@ -2513,6 +2513,7 @@ void Notepad_plus::addHotSpot(ScintillaEditView* view)
 	{
 		TCHAR wc;
 		int lenUtf8;
+		bool yellow = false;
 		bool ok = utf8toWideChar (& bufUtf8 [idxUtf8 - startPos], & lenUtf8, & wc);
 		if (ok && (encoding >= 0))
 		{
@@ -2520,9 +2521,9 @@ void Notepad_plus::addHotSpot(ScintillaEditView* view)
 			BOOL defCharUsed = FALSE;
 			int res = WideCharToMultiByte (encoding, WC_NO_BEST_FIT_CHARS, & wc, 1, bufEnc, _countof (bufEnc), NULL, & defCharUsed);
 			if ((res < 1) || defCharUsed)
-				ok = false;
+				yellow = true;
 		}
-		if (!ok)
+		if (yellow)
 		{
 			pView->execute(SCI_SETINDICATORVALUE, 0);
 			pView->execute(SCI_INDICATORFILLRANGE, idxUtf8, lenUtf8);

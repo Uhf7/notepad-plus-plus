@@ -2179,7 +2179,7 @@ void Notepad_plus::command(int id)
 		{
 			Buffer * buf = _pEditView->getCurrentBuffer();
 
-			UniMode um;
+			UniMode um = uniCookie;
 			bool shoulBeDirty = true;
 			switch (id)
 			{
@@ -2314,14 +2314,7 @@ void Notepad_plus::command(int id)
 					return;
 				}
 			}
-			if (encodingTo == -1)
-			{
-				_pEditView->reinterpretAsUtf8();
-			}
-			else
-			{
-				_pEditView->reinterpretAsEncoding (encodingTo);
-			}
+			_pEditView->reinterpret(encodingTo);
 			break;
 		}
 

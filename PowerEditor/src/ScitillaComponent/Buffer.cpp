@@ -1407,7 +1407,7 @@ bool FileManager::loadFileData(Document doc, const TCHAR * filename, char* data,
 					format = getEOLFormatForm(data, lenFile, EolType::unknown);
 			}
 			else
-			{
+			{ // UTF-8, UTF-8 BOM, UCS-16 LE, UCS-16 BE
 				lenConvert = unicodeConvertor->convert(data, lenFile);
 				_pscratchTilla->execute(SCI_APPENDTEXT, lenConvert, reinterpret_cast<LPARAM>(unicodeConvertor->getNewBuf()));
 				if (format == EolType::unknown)

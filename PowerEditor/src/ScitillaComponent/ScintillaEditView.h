@@ -651,8 +651,10 @@ public:
 	void changeTextDirection(bool isRTL);
 	bool isTextDirectionRTL() const;
 
-	void ScintillaEditView::reinterpretAsEncoding(int encodingTo);
-	void ScintillaEditView::reinterpretAsUtf8();
+	void ScintillaEditView::reinterpret(int encodingTo);
+	void ScintillaEditView::reinterpretEncodingAsEncoding(int encodingFrom, int encodingTo);
+	void ScintillaEditView::reinterpretUtf8AsEncoding(int encodingTo);
+	void ScintillaEditView::reinterpretAsUtf8(int encodingFrom);
 
 protected:
 	static HINSTANCE _hLib;

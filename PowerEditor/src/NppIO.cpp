@@ -294,7 +294,7 @@ BufferID Notepad_plus::doOpen(const generic_string& fileName, bool isRecursive, 
     scnN.nmhdr.idFrom = NULL;
     _pluginsManager.notify(&scnN);
 
-    if (encoding == -1)
+    if (encoding == ENC_NEW)
     {
 		encoding = getHtmlXmlEncoding(longFileName);
     }
