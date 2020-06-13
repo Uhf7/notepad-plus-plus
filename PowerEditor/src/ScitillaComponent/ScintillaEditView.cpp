@@ -3840,25 +3840,6 @@ void ScintillaEditView::reinterpretUtf8AsEncoding (int encodingTo)
 							lineNew += lineOld[idxOld++];
 						continue;
 					}
-/*
-					char bufTo_x [8];
-					int lenTo_x = WideCharToMultiByte(encodingTo, WC_NO_BEST_FIT_CHARS, & tbWC, 1, bufTo_x, _countof(bufTo_x), NULL, & defCharUsed);
-					if ((lenTo_x > 0) && (!defCharUsed))
-					{ // simply keep original UTF-8 display character in new encoding
-						for (int i = 0; i < tbLen; i++)
-							lineNew += lineOld[idxOld++];
-						continue;
-					}
-*/
-/*
-					TCHAR bufFrom_w [16];
-					char bufTo [32];
-					for (int i = 0; i < lenFrom; i++)
-						bufFrom_w [i] = (unsigned char) bufFrom [i];
-					int lenTo = WideCharToMultiByte (CP_UTF8, 0, bufFrom_w, lenFrom, bufTo, _countof(bufTo), NULL, NULL);
-					for (int i = 0; i < lenTo; i++)
-						lineNew += bufTo [i];
-*/
 
 					if ((lenFrom == 1) && IsDBCSLeadByteEx(encodingTo, bufFrom [0]))
 					{
@@ -4129,4 +4110,67 @@ void ScintillaEditView::reinterpret(int encodingTo)
 	}
 	buf->setEncoding(encodingTo);
 	buf->setUnicodeMode(uniCookie);
+}
+
+void ScintillaEditView::appendAsEncoded(int encoding, int len, char * data)
+{
+	int idx = 0;
+	std::basic_string<char> buffer;
+	char forceCtl = 0;
+	while (idx < len)
+	{
+		TCHAR wc [8];
+		int l1 = IsDBCSLeadByteEx(encoding, data [idx]) ? 2 : 1;
+		int lwc = MultiByteToWideChar(encoding, 0, & data [idx], l1, wc, _countof(wc));
+		bool valid = (lwc > 0);
+		if (valid)
+		{
+			char vc [16];
+			BOOL defCharUsed = FALSE;
+			int lvc = WideCharToMultiByte(encoding, WC_NO_BEST_FIT_CHARS, wc, lwc, vc, _countof(vc), NULL, & defCharUsed);
+			valid = (lvc == l1);
+			if (valid)
+			{
+				for (int i = 0; i < lvc; i++)
+				{
+					if (vc [i] != data [idx+i])
+						valid = false;
+				}
+			}
+		}
+		if (valid)
+		{
+			char vc [16];
+			int lvc = WideCharToMultiByte(CP_UTF8, 0, wc, lwc, vc, _countof(vc), NULL, NULL);
+			if (forceCtl)
+			{
+				if ((vc [0] & 0xc0) == 0x80)
+					buffer += forceCtl;
+				forceCtl = 0;
+			}
+			for (int i = 0; i < lvc; i++)
+				buffer += vc [i];
+		}
+		else
+		{
+			l1 = 1;
+			if (forceCtl)
+			{
+				if ((data [idx] & 0xc0) == 0x80)
+					buffer += forceCtl;
+				forceCtl = 0;
+			}
+			buffer += data [idx];
+			if (((unsigned char)data [idx] >= (unsigned char)0xC2) && ((unsigned char)data [idx] <= (unsigned char)0xDF))
+				forceCtl = data [idx];
+		}
+		idx += l1;
+		if ((!forceCtl) && (buffer.length() > 128))
+		{
+			execute(SCI_APPENDTEXT, buffer.length(), reinterpret_cast<LPARAM>(buffer.c_str()));
+			buffer = "";
+		}
+	}
+	if (buffer.length() > 0)
+		execute(SCI_APPENDTEXT, buffer.length(), reinterpret_cast<LPARAM>(buffer.c_str()));
 }

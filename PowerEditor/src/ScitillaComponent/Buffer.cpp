@@ -1377,7 +1377,7 @@ bool FileManager::loadFileData(Document doc, const TCHAR * filename, char* data,
 						const NewDocDefaultSettings & ndds = (nppParamInst.getNppGUI()).getNewDocDefaultSettings();
 						fileFormat._encoding = ndds._codepage;
 					}
-                }
+				}
 
 				if (fileFormat._language == L_TEXT)
 				{
@@ -1385,23 +1385,12 @@ bool FileManager::loadFileData(Document doc, const TCHAR * filename, char* data,
 					fileFormat._language = detectLanguageFromTextBegining((unsigned char *)data, lenFile);
 				}
 
-                isFirstTime = false;
-            }
+				isFirstTime = false;
+				}
 
 			if (fileFormat._encoding >= ENC_ANSI)
 			{
-				if (fileFormat._encoding == SC_CP_UTF8)
-				{
-					// Pass through UTF-8 (this does not check validity of characters, thus inserting a multi-byte character in two halfs is working)
-					_pscratchTilla->execute(SCI_APPENDTEXT, lenFile, reinterpret_cast<LPARAM>(data));
-				}
-				else
-				{
-					WcharMbcsConvertor& wmc = WcharMbcsConvertor::getInstance();
-					int newDataLen = 0;
-					const char *newData = wmc.encode(fileFormat._encoding, SC_CP_UTF8, data, static_cast<int32_t>(lenFile), &newDataLen, &incompleteMultibyteChar);
-					_pscratchTilla->execute(SCI_APPENDTEXT, newDataLen, reinterpret_cast<LPARAM>(newData));
-				}
+				_pscratchTilla->appendAsEncoded(fileFormat._encoding, lenFile, data);
 
 				if (format == EolType::unknown)
 					format = getEOLFormatForm(data, lenFile, EolType::unknown);
