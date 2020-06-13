@@ -329,7 +329,9 @@ void ScintillaEditView::init(HINSTANCE hInst, HWND hPere)
 	execute(SCI_INDICSETUNDER, SCE_UNIVERSAL_FOUND_STYLE_EXT4, true);
 	execute(SCI_INDICSETUNDER, SCE_UNIVERSAL_FOUND_STYLE_EXT5, true);
 
-	if ((NppParameters::getInstance()).getNppGUI()._useDirectWrite)
+    execute(SCI_INDICSETHOVERSTYLE, URL_INDIC, INDIC_FULLBOX);
+
+	if ((NppParameters::getInstance()).getNppGUI()._writeTechnologyEngine == directWriteTechnology)
 		execute(SCI_SETTECHNOLOGY, SC_TECHNOLOGY_DIRECTWRITE);
 	// If useDirectWrite is turned off, leave the technology setting untouched,
 	// so that existing plugins using SCI_SETTECHNOLOGY behave like before
