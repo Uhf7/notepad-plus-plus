@@ -4112,20 +4112,31 @@ void ScintillaEditView::reinterpret(int encodingTo)
 	buf->setUnicodeMode(uniCookie);
 }
 
-void ScintillaEditView::appendAsEncoded(int encoding, int len, char * data)
+int ScintillaEditView::appendAsEncoded(int encoding, int len, char * data, bool last)
 {
-	int idx = 0;
+	int idx = 0, appended = 0;
 	std::basic_string<char> buffer;
 	char forceCtl = 0;
 	while (idx < len)
 	{
-		TCHAR wc [8];
 		int l1 = IsDBCSLeadByteEx(encoding, data [idx]) ? 2 : 1;
+		if ((idx + l1) > len)
+		{
+			if (! last)
+			{
+//				TCHAR dbg [256];
+//				wsprintf(dbg, L"appended %li of %li\n", appended, len);
+//				OutputDebugString(dbg);
+				return appended;
+			}
+			l1 = 1;
+		}
+		TCHAR wc [4];
 		int lwc = MultiByteToWideChar(encoding, 0, & data [idx], l1, wc, _countof(wc));
 		bool valid = (lwc > 0);
 		if (valid)
 		{
-			char vc [16];
+			char vc [8];
 			BOOL defCharUsed = FALSE;
 			int lvc = WideCharToMultiByte(encoding, WC_NO_BEST_FIT_CHARS, wc, lwc, vc, _countof(vc), NULL, & defCharUsed);
 			valid = (lvc == l1);
@@ -4140,7 +4151,7 @@ void ScintillaEditView::appendAsEncoded(int encoding, int len, char * data)
 		}
 		if (valid)
 		{
-			char vc [16];
+			char vc [8];
 			int lvc = WideCharToMultiByte(CP_UTF8, 0, wc, lwc, vc, _countof(vc), NULL, NULL);
 			if (forceCtl)
 			{
@@ -4165,12 +4176,22 @@ void ScintillaEditView::appendAsEncoded(int encoding, int len, char * data)
 				forceCtl = data [idx];
 		}
 		idx += l1;
-		if ((!forceCtl) && (buffer.length() > 128))
+		if ((!forceCtl) && (buffer.length() > 0))
 		{
 			execute(SCI_APPENDTEXT, buffer.length(), reinterpret_cast<LPARAM>(buffer.c_str()));
 			buffer = "";
+			appended = idx;
 		}
 	}
-	if (buffer.length() > 0)
+	if (last && (buffer.length() > 0))
+	{
+		appended = idx;
 		execute(SCI_APPENDTEXT, buffer.length(), reinterpret_cast<LPARAM>(buffer.c_str()));
+	}
+//	{
+//		TCHAR dbg [256];
+//		wsprintf(dbg, L"appended %li of %li\n", appended, len);
+//		OutputDebugString(dbg);
+//	}
+	return appended;
 }

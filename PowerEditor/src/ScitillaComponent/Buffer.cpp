@@ -1345,10 +1345,12 @@ bool FileManager::loadFileData(Document doc, const TCHAR * filename, char* data,
 		size_t lenConvert = 0;	//just in case conversion results in 0, but file not empty
 		bool isFirstTime = true;
 		int incompleteMultibyteChar = 0;
-
+		int totalRead = 0;
 		do
 		{
-			lenFile = fread(data+incompleteMultibyteChar, 1, blockSize-incompleteMultibyteChar, fp) + incompleteMultibyteChar;
+			lenFile = fread(data+incompleteMultibyteChar, 1, blockSize-incompleteMultibyteChar, fp);
+			totalRead += lenFile;
+			lenFile += incompleteMultibyteChar;
 			if (ferror(fp) != 0)
 			{
 				success = false;
@@ -1386,17 +1388,19 @@ bool FileManager::loadFileData(Document doc, const TCHAR * filename, char* data,
 				}
 
 				isFirstTime = false;
-				}
+			}
 
-			if (fileFormat._encoding >= ENC_ANSI)
+			if ((fileFormat._encoding >= ENC_ANSI) && (fileFormat._encoding != SC_CP_UTF8))
 			{
-				_pscratchTilla->appendAsEncoded(fileFormat._encoding, lenFile, data);
+				int appended = _pscratchTilla->appendAsEncoded(fileFormat._encoding, lenFile, data, totalRead == fileSize);
+				incompleteMultibyteChar = lenFile - appended;
 
 				if (format == EolType::unknown)
 					format = getEOLFormatForm(data, lenFile, EolType::unknown);
 			}
 			else
 			{ // UTF-8, UTF-8 BOM, UCS-16 LE, UCS-16 BE
+				fileFormat._encoding = ENC_UNICODE;
 				lenConvert = unicodeConvertor->convert(data, lenFile);
 				_pscratchTilla->execute(SCI_APPENDTEXT, lenConvert, reinterpret_cast<LPARAM>(unicodeConvertor->getNewBuf()));
 				if (format == EolType::unknown)

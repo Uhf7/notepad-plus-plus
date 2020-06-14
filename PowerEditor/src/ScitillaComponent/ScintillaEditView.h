@@ -655,7 +655,7 @@ public:
 	void reinterpretEncodingAsEncoding(int encodingFrom, int encodingTo);
 	void reinterpretUtf8AsEncoding(int encodingTo);
 	void reinterpretAsUtf8(int encodingFrom);
-	void appendAsEncoded(int encoding, int len, char * data);
+	int appendAsEncoded(int encoding, int len, char * data, bool last);
 
 protected:
 	static HINSTANCE _hLib;
