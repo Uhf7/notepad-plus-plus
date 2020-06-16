@@ -46,7 +46,7 @@ enum DIALOG_TYPE {FIND_DLG, REPLACE_DLG, FINDINFILES_DLG, MARK_DLG};
 
 //#define FIND_REPLACE_STR_MAX 256
 
-enum InWhat{ALL_OPEN_DOCS, FILES_IN_DIR, CURRENT_DOC};
+enum InWhat{ALL_OPEN_DOCS, FILES_IN_DIR, CURRENT_DOC, CURR_DOC_SELECTION};
 
 struct FoundInfo {
 	FoundInfo(int start, int end, size_t lineNumber, const TCHAR *fullPath)
@@ -128,14 +128,14 @@ public:
 	void addSearchLine(const TCHAR *searchName);
 	void addFileNameTitle(const TCHAR * fileName);
 	void addFileHitCount(int count);
-	void addSearchHitCount(int count, int countSearched, bool isMatchLines = false);
+	void addSearchHitCount(int count, int countSearched, bool isMatchLines, bool searchedEntireNotSelection);
 	void add(FoundInfo fi, SearchResultMarking mi, const TCHAR* foundline);
 	void setFinderStyle();
 	void removeAll();
 	void openAll();
 	void copy();
 	void beginNewFilesSearch();
-	void finishFilesSearch(int count, int searchedCount, bool isMatchLines = false);
+	void finishFilesSearch(int count, int searchedCount, bool isMatchLines, bool searchedEntireNotSelection);
 	void gotoNextFoundResult(int direction);
 	void gotoFoundLine();
 	void deleteResult();
@@ -310,9 +310,10 @@ public :
 		_pFinder->addSearchLine(getText2search().c_str());
 	}
 
-	void finishFilesSearch(int count, int searchedCount)
+	void finishFilesSearch(int count, int searchedCount, bool searchedEntireNotSelection)
 	{
-		_pFinder->finishFilesSearch(count, searchedCount);
+		const bool isMatchLines = false;
+		_pFinder->finishFilesSearch(count, searchedCount, isMatchLines, searchedEntireNotSelection);
 	}
 
 	void focusOnFinder() {
@@ -347,6 +348,9 @@ protected :
 	void resizeDialogElements(LONG newWidth);
 	virtual INT_PTR CALLBACK run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
 	static LONG_PTR originalFinderProc;
+	static LONG_PTR originalComboEditProc;
+
+	static LRESULT FAR PASCAL comboEditProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 	// Window procedure for the finder
 	static LRESULT FAR PASCAL finderProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
