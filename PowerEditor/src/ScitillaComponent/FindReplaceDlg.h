@@ -364,6 +364,7 @@ private :
 
 	DIALOG_TYPE _currentStatus;
 	RECT _findClosePos, _replaceClosePos, _findInFilesClosePos;
+	RECT _findCountPos, _replaceCountPos;
 	RECT _countInSelFramePos, _replaceInSelFramePos;
 	RECT _countInSelCheckPos, _replaceInSelCheckPos;
 

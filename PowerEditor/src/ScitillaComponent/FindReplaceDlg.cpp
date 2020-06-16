@@ -883,17 +883,15 @@ INT_PTR CALLBACK FindReplaceDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM
 				SendMessage(hDirCombo, WM_SETFONT, (WPARAM)_hMonospaceFont, MAKELPARAM(true, 0));
 			}
 
+			DPIManager* pDpiMgr = &(NppParameters::getInstance()._dpiManager);
+
+			// Close button
 			RECT arc;
 			::GetWindowRect(::GetDlgItem(_hSelf, IDCANCEL), &arc);
 			_findInFilesClosePos.bottom = _replaceClosePos.bottom = _findClosePos.bottom = arc.bottom - arc.top;
 			_findInFilesClosePos.right = _replaceClosePos.right = _findClosePos.right = arc.right - arc.left;
 
-			POINT p;
-			p.x = arc.left;
-			p.y = arc.top;
-			::ScreenToClient(_hSelf, &p);
-
-			p = getTopPoint(::GetDlgItem(_hSelf, IDCANCEL), !_isRTL);
+			POINT p = getTopPoint(::GetDlgItem(_hSelf, IDCANCEL), !_isRTL);
 			_replaceClosePos.left = p.x;
 			_replaceClosePos.top = p.y;
 
@@ -903,9 +901,9 @@ INT_PTR CALLBACK FindReplaceDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM
 
 			 p = getTopPoint(::GetDlgItem(_hSelf, IDCANCEL), !_isRTL);
 			 _findClosePos.left = p.x;
-			 _findClosePos.top = p.y + 10;
+			 _findClosePos.top = p.y - pDpiMgr->scaleY(28);
 
-			 // in selection check
+			 // In Selection frame and check mark
 			 RECT checkRect;
 			 ::GetWindowRect(::GetDlgItem(_hSelf, IDC_IN_SELECTION_CHECK), &checkRect);
 			 _countInSelCheckPos.bottom = _replaceInSelCheckPos.bottom = checkRect.bottom - checkRect.top;
@@ -913,24 +911,32 @@ INT_PTR CALLBACK FindReplaceDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM
 
 			 p = getTopPoint(::GetDlgItem(_hSelf, IDC_IN_SELECTION_CHECK), !_isRTL);
 			 _countInSelCheckPos.left = _replaceInSelCheckPos.left = p.x;
-			 _countInSelCheckPos.top = _replaceInSelCheckPos.top = p.y;
+			_replaceInSelCheckPos.top = p.y;
 
-			 POINT countP = getTopPoint(::GetDlgItem(_hSelf, IDCCOUNTALL), !_isRTL);
-
-			 // in selection Frame
-			 RECT frameRect;
-			 ::GetWindowRect(::GetDlgItem(_hSelf, IDC_REPLACEINSELECTION), &frameRect);
-			 _countInSelFramePos.bottom = _replaceInSelFramePos.bottom = frameRect.bottom - frameRect.top;
-			 _countInSelFramePos.right = _replaceInSelFramePos.right = frameRect.right - frameRect.left;
+			 ::GetWindowRect(::GetDlgItem(_hSelf, IDC_REPLACEINSELECTION), &arc);
+			 _countInSelFramePos.bottom = _replaceInSelFramePos.bottom = arc.bottom - arc.top;
+			 _countInSelFramePos.right = _replaceInSelFramePos.right = arc.right - arc.left;
 
 			 p = getTopPoint(::GetDlgItem(_hSelf, IDC_REPLACEINSELECTION), !_isRTL);
 			 _countInSelFramePos.left = _replaceInSelFramePos.left = p.x;
-			 _countInSelFramePos.top = _replaceInSelFramePos.top = p.y;
+			_replaceInSelFramePos.top = p.y;
 
-			 DPIManager* pDpiMgr = &(NppParameters::getInstance()._dpiManager);
+			 p = getTopPoint(::GetDlgItem(_hSelf, IDC_FINDALL_CURRENTFILE), !_isRTL);
+			 _countInSelFramePos.top = p.y - pDpiMgr->scaleY(10);
+			 _countInSelCheckPos.top = p.y + pDpiMgr->scaleY(3);
 
-			 _countInSelFramePos.top = countP.y - pDpiMgr->scaleY(10);
-			 _countInSelFramePos.bottom = pDpiMgr->scaleY(80 - 3);
+			// Count button
+			_findCountPos.top = p.y;
+
+			::GetWindowRect(::GetDlgItem(_hSelf, IDCCOUNTALL), & arc);
+			_findCountPos.bottom = _replaceCountPos.bottom = arc.bottom - arc.top;
+			_findCountPos.right = _replaceCountPos.right = arc.right - arc.left;
+
+			p = getTopPoint(::GetDlgItem(_hSelf, IDCCOUNTALL), !_isRTL);
+			_findCountPos.left = _replaceCountPos.left = p.x;
+
+			 p = getTopPoint(::GetDlgItem(_hSelf, IDREPLACEALL), !_isRTL);
+			 _replaceCountPos.top = p.y;
 
 			 NativeLangSpeaker *pNativeSpeaker = (NppParameters::getInstance()).getNativeLangSpeaker();
 
@@ -1345,7 +1351,7 @@ INT_PTR CALLBACK FindReplaceDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM
 
 				case IDCCOUNTALL :
 				{
-					if (_currentStatus == FIND_DLG)
+					if ((_currentStatus == FIND_DLG) || (_currentStatus == REPLACE_DLG))
 					{
 						setStatusbarMessage(TEXT(""), FSNoMessage);
 						HWND hFindCombo = ::GetDlgItem(_hSelf, IDFINDWHAT);
@@ -2594,6 +2600,7 @@ void FindReplaceDlg::enableReplaceFunc(bool isEnable)
 	_currentStatus = isEnable?REPLACE_DLG:FIND_DLG;
 	int hideOrShow = isEnable?SW_SHOW:SW_HIDE;
 	RECT *pClosePos = isEnable ? &_replaceClosePos : &_findClosePos;
+	RECT *pCountPos = isEnable ? &_replaceCountPos : &_findCountPos;
 	RECT *pInSelectionFramePos = isEnable ? &_replaceInSelFramePos : &_countInSelFramePos;
 	RECT *pInSectionCheckPos = isEnable ? &_replaceInSelCheckPos : &_countInSelCheckPos;
 
@@ -2617,12 +2624,12 @@ void FindReplaceDlg::enableReplaceFunc(bool isEnable)
 
 	// find controls
 	::ShowWindow(::GetDlgItem(_hSelf, IDC_FINDALL_OPENEDFILES), !hideOrShow);
-	::ShowWindow(::GetDlgItem(_hSelf, IDCCOUNTALL),!hideOrShow);
 	::ShowWindow(::GetDlgItem(_hSelf, IDC_FINDALL_CURRENTFILE),!hideOrShow);
 
 	gotoCorrectTab();
 
 	::MoveWindow(::GetDlgItem(_hSelf, IDCANCEL), pClosePos->left + _deltaWidth, pClosePos->top, pClosePos->right, pClosePos->bottom, TRUE);
+	::MoveWindow(::GetDlgItem(_hSelf, IDCCOUNTALL), pCountPos->left + _deltaWidth, pCountPos->top, pCountPos->right, pCountPos->bottom, TRUE);
 	::MoveWindow(::GetDlgItem(_hSelf, IDC_IN_SELECTION_CHECK), pInSectionCheckPos->left + _deltaWidth, pInSectionCheckPos->top, pInSectionCheckPos->right, pInSectionCheckPos->bottom, TRUE);
 	::MoveWindow(::GetDlgItem(_hSelf, IDC_REPLACEINSELECTION), pInSelectionFramePos->left + _deltaWidth, pInSelectionFramePos->top, pInSelectionFramePos->right, pInSelectionFramePos->bottom, TRUE);
 
