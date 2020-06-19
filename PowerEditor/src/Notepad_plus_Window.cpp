@@ -252,8 +252,8 @@ void Notepad_plus_Window::init(HINSTANCE hInst, HWND parent, const TCHAR *cmdLin
 		// the Project Panels are not loaded by Notepad_plus::doOpen only, but also by the Plugin Manager restoring the state
 		// of the last session from config.xml.
 		::SendMessage(_hSelf, WM_COMMAND, IDM_VIEW_PROJECT_PANEL_1, 0);
-		::SendMessage(_hSelf, WM_COMMAND, IDM_VIEW_SWITCHTO_OTHER_VIEW, 0);
 	}
+	::SendMessage(_hSelf, WM_ACTIVATE, WA_ACTIVE, 0);
 
 	// Notify plugins that Notepad++ is ready
 	SCNotification scnN;

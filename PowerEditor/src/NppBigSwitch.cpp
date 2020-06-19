@@ -543,6 +543,9 @@ LRESULT Notepad_plus::process(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 				_pDocMap->reloadMap();
 			}
 
+			addHotSpot(_pEditView);
+			addHotSpot(_pNonEditView);
+
 			result = TRUE;
 			break;
 		}
@@ -1675,9 +1678,11 @@ LRESULT Notepad_plus::process(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 			//reset styler for change in Stylers.xml
 			_mainEditView.defineDocType(_mainEditView.getCurrentBuffer()->getLangType());
 			_mainEditView.performGlobalStyles();
+			addHotSpot(& _mainEditView);
 
 			_subEditView.defineDocType(_subEditView.getCurrentBuffer()->getLangType());
 			_subEditView.performGlobalStyles();
+			addHotSpot(& _subEditView);
 
 			_findReplaceDlg.updateFinderScintilla();
 
