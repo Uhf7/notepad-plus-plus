@@ -329,11 +329,6 @@ void ScintillaEditView::init(HINSTANCE hInst, HWND hPere)
 	execute(SCI_INDICSETUNDER, SCE_UNIVERSAL_FOUND_STYLE_EXT4, true);
 	execute(SCI_INDICSETUNDER, SCE_UNIVERSAL_FOUND_STYLE_EXT5, true);
 
-	execute(SCI_INDICSETHOVERSTYLE, URL_INDIC, INDIC_FULLBOX);
-	execute(SCI_INDICSETALPHA, URL_INDIC, 70);
-	execute(SCI_INDICSETFLAGS, URL_INDIC, SC_INDICFLAG_VALUEFORE);
-
-
 	if ((NppParameters::getInstance()).getNppGUI()._writeTechnologyEngine == directWriteTechnology)
 		execute(SCI_SETTECHNOLOGY, SC_TECHNOLOGY_DIRECTWRITE);
 	// If useDirectWrite is turned off, leave the technology setting untouched,
@@ -2262,15 +2257,12 @@ void ScintillaEditView::replaceSelWith(const char * replaceText)
 void ScintillaEditView::getVisibleStartAndEndPosition(int * startPos, int * endPos)
 {
 	assert(startPos != NULL && endPos != NULL);
+	// Get the position of the 1st and last showing chars from the edit view
+	RECT rcEditView;
+	getClientRect(rcEditView);
+	*startPos = static_cast<int32_t>(execute(SCI_POSITIONFROMPOINT, 0, 0));
+	*endPos = static_cast<int32_t>(execute(SCI_POSITIONFROMPOINT, rcEditView.right - rcEditView.left, rcEditView.bottom - rcEditView.top));
 
-	auto firstVisibleLine = execute(SCI_GETFIRSTVISIBLELINE);
-	*startPos = static_cast<int32_t>(execute(SCI_POSITIONFROMLINE, execute(SCI_DOCLINEFROMVISIBLE, firstVisibleLine)));
-	auto linesOnScreen = execute(SCI_LINESONSCREEN);
-	auto lineCount = execute(SCI_GETLINECOUNT);
-	auto visibleLine = execute(SCI_DOCLINEFROMVISIBLE, firstVisibleLine + min(linesOnScreen, lineCount));
-	*endPos = static_cast<int32_t>(execute(SCI_POSITIONFROMLINE, visibleLine));
-	if (*endPos == -1) 
-		*endPos = static_cast<int32_t>(execute(SCI_GETLENGTH));
 }
 
 char * ScintillaEditView::getWordFromRange(char * txt, int size, int pos1, int pos2)
@@ -2784,6 +2776,13 @@ pair<int, int> ScintillaEditView::getSelectionLinesRange() const
 
 	range.first = static_cast<int32_t>(execute(SCI_LINEFROMPOSITION, start));
 	range.second = static_cast<int32_t>(execute(SCI_LINEFROMPOSITION, end));
+
+	if ((range.first != range.second) && (execute(SCI_POSITIONFROMLINE, range.second) == end))
+	{
+		// if the end of the selection includes the line-ending, 
+		// then don't include the following line in the range
+		--range.second;
+	}
 
     return range;
 }

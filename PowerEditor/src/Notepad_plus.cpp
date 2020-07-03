@@ -1400,10 +1400,13 @@ void Notepad_plus::removeEmptyLine(bool isBlankContained)
 		env._str2Search = TEXT("^$(\\r\\n|\\r|\\n)");
 	}
 	env._str4Replace = TEXT("");
-    env._searchType = FindRegex;
-
-	_findReplaceDlg.processAll(ProcessReplaceAll, &env, true);
-
+	env._searchType = FindRegex;
+	auto mainSelStart = _pEditView->execute(SCI_GETSELECTIONSTART);
+	auto mainSelEnd = _pEditView->execute(SCI_GETSELECTIONEND);
+	auto mainSelLength = mainSelEnd - mainSelStart;
+	bool isEntireDoc = mainSelLength == 0;
+	env._isInSelection = !isEntireDoc;
+	_findReplaceDlg.processAll(ProcessReplaceAll, &env, isEntireDoc);
 
 	// remove the last line if it's an empty line.
 	if (isBlankContained)
@@ -1414,7 +1417,7 @@ void Notepad_plus::removeEmptyLine(bool isBlankContained)
 	{
 		env._str2Search = TEXT("(\\r\\n|\\r|\\n)^$");
 	}
-	_findReplaceDlg.processAll(ProcessReplaceAll, &env, true);
+	_findReplaceDlg.processAll(ProcessReplaceAll, &env, isEntireDoc);
 }
 
 void Notepad_plus::removeDuplicateLines()
@@ -1569,8 +1572,14 @@ bool Notepad_plus::replaceInFiles()
 		{
 			Buffer * pBuf = MainFileManager.getBufferByID(id);
 			_invisibleEditView.execute(SCI_SETDOCPOINTER, 0, pBuf->getDocument());
-			auto cp = _invisibleEditView.execute(SCI_GETCODEPAGE);
-			_invisibleEditView.execute(SCI_SETCODEPAGE, pBuf->getUnicodeMode() == uni8Bit ? cp : SC_CP_UTF8);
+			int detectedCp = static_cast<int>(_invisibleEditView.execute(SCI_GETCODEPAGE));
+			int cp2set = SC_CP_UTF8;
+			if (pBuf->getUnicodeMode() == uni8Bit)
+			{
+				cp2set = (detectedCp == SC_CP_UTF8 ? CP_ACP : detectedCp);
+			}
+			_invisibleEditView.execute(SCI_SETCODEPAGE, cp2set);
+
 			_invisibleEditView.setCurrentBuffer(pBuf);
 
 			FindersInfo findersInfo;
@@ -1657,8 +1666,13 @@ bool Notepad_plus::findInFinderFiles(FindersInfo *findInFolderInfo)
 		{
 			Buffer * pBuf = MainFileManager.getBufferByID(id);
 			_invisibleEditView.execute(SCI_SETDOCPOINTER, 0, pBuf->getDocument());
-			auto cp = _invisibleEditView.execute(SCI_GETCODEPAGE);
-			_invisibleEditView.execute(SCI_SETCODEPAGE, pBuf->getUnicodeMode() == uni8Bit ? cp : SC_CP_UTF8);
+			int detectedCp = static_cast<int>(_invisibleEditView.execute(SCI_GETCODEPAGE));
+			int cp2set = SC_CP_UTF8;
+			if (pBuf->getUnicodeMode() == uni8Bit)
+			{
+				cp2set = (detectedCp == SC_CP_UTF8 ? CP_ACP : detectedCp);
+			}
+			_invisibleEditView.execute(SCI_SETCODEPAGE, cp2set);
 
 			findInFolderInfo->_pFileName = fileNames.at(i).c_str();
 			nbTotal += _findReplaceDlg.processAll(ProcessFindInFinder, &(findInFolderInfo->_findOption), true, findInFolderInfo);
@@ -1775,8 +1789,14 @@ bool Notepad_plus::findInFiles()
 		{
 			Buffer * pBuf = MainFileManager.getBufferByID(id);
 			_invisibleEditView.execute(SCI_SETDOCPOINTER, 0, pBuf->getDocument());
-			auto cp = _invisibleEditView.execute(SCI_GETCODEPAGE);
-			_invisibleEditView.execute(SCI_SETCODEPAGE, pBuf->getUnicodeMode() == uni8Bit ? cp : SC_CP_UTF8);
+			int detectedCp = static_cast<int>(_invisibleEditView.execute(SCI_GETCODEPAGE));
+			int cp2set = SC_CP_UTF8;
+			if (pBuf->getUnicodeMode() == uni8Bit)
+			{
+				cp2set = (detectedCp == SC_CP_UTF8 ? CP_ACP : detectedCp);
+			}
+
+			_invisibleEditView.execute(SCI_SETCODEPAGE, cp2set);
 			FindersInfo findersInfo;
 			findersInfo._pFileName = fileNames.at(i).c_str();
 			nbTotal += _findReplaceDlg.processAll(ProcessFindAll, FindReplaceDlg::_env, isEntireDoc, &findersInfo);
@@ -2504,8 +2524,15 @@ void Notepad_plus::addHotSpot(ScintillaEditView* view)
 	LPARAM indicStyle = (urlAction == 2) ? INDIC_PLAIN : INDIC_HIDDEN;
 
 	LPARAM indicStyleCur = pView->execute(SCI_INDICGETSTYLE, URL_INDIC);
-	if (indicStyleCur != indicStyle)
+	LPARAM indicHoverStyleCur = pView->execute(SCI_INDICGETHOVERSTYLE, URL_INDIC);
+
+	if ((indicStyleCur != indicStyle) || (indicHoverStyleCur != INDIC_FULLBOX))
+	{
 		pView->execute(SCI_INDICSETSTYLE, URL_INDIC, indicStyle);
+		pView->execute(SCI_INDICSETHOVERSTYLE, URL_INDIC, INDIC_FULLBOX);
+		pView->execute(SCI_INDICSETALPHA, URL_INDIC, 70);
+		pView->execute(SCI_INDICSETFLAGS, URL_INDIC, SC_INDICFLAG_VALUEFORE);
+	}
 
 	int startPos = 0;
 	int endPos = -1;

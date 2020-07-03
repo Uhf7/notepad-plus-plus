@@ -583,7 +583,7 @@ void Notepad_plus::command(int id)
 				hasLineSelection = selStart != selEnd;
 				if (hasLineSelection)
 				{
-					pair<int, int> lineRange = _pEditView->getSelectionLinesRange();
+					const pair<int, int> lineRange = _pEditView->getSelectionLinesRange();
 					// One single line selection is not allowed.
 					if (lineRange.first == lineRange.second)
 					{
@@ -1419,23 +1419,41 @@ void Notepad_plus::command(int id)
 			break;
 
 		case IDM_EDIT_SPLIT_LINES:
-			_pEditView->execute(SCI_TARGETFROMSELECTION);
-			if (_pEditView->execute(SCI_GETEDGEMODE) == EDGE_NONE)
+		{
+			pair<int, int> lineRange = _pEditView->getSelectionLinesRange();
+			if (lineRange.first != -1)
 			{
-				_pEditView->execute(SCI_LINESSPLIT);
+				auto anchorPos = _pEditView->execute(SCI_POSITIONFROMLINE, lineRange.first);
+				auto caretPos = _pEditView->execute(SCI_GETLINEENDPOSITION, lineRange.second);
+				_pEditView->execute(SCI_SETSELECTION, caretPos, anchorPos);
+				_pEditView->execute(SCI_TARGETFROMSELECTION);
+				if (_pEditView->execute(SCI_GETEDGEMODE) == EDGE_NONE)
+				{
+					_pEditView->execute(SCI_LINESSPLIT);
+				}
+				else
+				{
+					auto textWidth = _pEditView->execute(SCI_TEXTWIDTH, STYLE_LINENUMBER, reinterpret_cast<LPARAM>("P"));
+					auto edgeCol = _pEditView->execute(SCI_GETEDGECOLUMN);
+					_pEditView->execute(SCI_LINESSPLIT, textWidth * edgeCol);
+				}
 			}
-			else
-			{
-				auto textWidth = _pEditView->execute(SCI_TEXTWIDTH, STYLE_LINENUMBER, reinterpret_cast<LPARAM>("P"));
-				auto edgeCol = _pEditView->execute(SCI_GETEDGECOLUMN);
-				_pEditView->execute(SCI_LINESSPLIT, textWidth * edgeCol);
-			}
-			break;
+		}
+		break;
 
 		case IDM_EDIT_JOIN_LINES:
-			_pEditView->execute(SCI_TARGETFROMSELECTION);
-			_pEditView->execute(SCI_LINESJOIN);
-			break;
+		{
+			const pair<int, int> lineRange = _pEditView->getSelectionLinesRange();
+			if (lineRange.first != lineRange.second)
+			{
+				auto anchorPos = _pEditView->execute(SCI_POSITIONFROMLINE, lineRange.first);
+				auto caretPos = _pEditView->execute(SCI_GETLINEENDPOSITION, lineRange.second);
+				_pEditView->execute(SCI_SETSELECTION, caretPos, anchorPos);
+				_pEditView->execute(SCI_TARGETFROMSELECTION);
+				_pEditView->execute(SCI_LINESJOIN);
+			}
+		}
+		break;
 
 		case IDM_EDIT_LINE_UP:
 			_pEditView->currentLinesUp();

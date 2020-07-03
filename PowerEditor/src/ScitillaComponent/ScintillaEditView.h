@@ -221,13 +221,14 @@ public:
 	{
 		::DestroyWindow(_hSelf);
 		_hSelf = NULL;
+		_pScintillaFunc = NULL;
 	};
 
 	virtual void init(HINSTANCE hInst, HWND hPere);
 
 	LRESULT execute(UINT Msg, WPARAM wParam=0, LPARAM lParam=0) const {
 		try {
-			LRESULT r = _pScintillaFunc(_pScintillaPtr, Msg, wParam, lParam);
+			LRESULT r = (_pScintillaFunc) ? _pScintillaFunc(_pScintillaPtr, Msg, wParam, lParam) : -1;
 			if ((Msg == SCI_SETCODEPAGE) || (Msg == SCI_SETDOCPOINTER))
 			{
 				execute(SCI_SETREPRESENTATION, (uptr_t)(char*)"\x7f", (sptr_t)(char*)"DEL");
