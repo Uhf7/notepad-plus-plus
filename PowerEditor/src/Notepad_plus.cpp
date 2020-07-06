@@ -6072,6 +6072,44 @@ void Notepad_plus::launchFileBrowser(const vector<generic_string> & folders, boo
 	_pFileBrowser->setClosed(false);
 }
 
+void Notepad_plus::checkProjectMenuItem()
+{
+	HMENU viewMenu = ::GetSubMenu(_mainMenuHandle, MENUINDEX_VIEW);
+	int viewMenuCount = ::GetMenuItemCount(viewMenu);
+	for (int i = 0; i < viewMenuCount; i++)
+	{
+		HMENU subMenu = ::GetSubMenu(viewMenu, i);
+		if (subMenu)
+		{
+			int subMenuCount = ::GetMenuItemCount(subMenu);
+			bool found = false;
+			bool checked = false;
+			for (int j = 0; j < subMenuCount; j++)
+			{
+				UINT const ids [] = {IDM_VIEW_PROJECT_PANEL_1, IDM_VIEW_PROJECT_PANEL_2, IDM_VIEW_PROJECT_PANEL_3};
+				UINT id = GetMenuItemID (subMenu, j);
+				for (int k = 0; k < _countof(ids); k++)
+				{
+					if (id == ids [k])
+					{
+						found = true;
+						UINT s = GetMenuState(subMenu, j, MF_BYPOSITION);
+						if (s & MF_CHECKED)
+						{
+							checked = true;
+							break;
+						}
+					}
+				}
+			}
+			if (found)
+			{
+				CheckMenuItem(viewMenu, i, (checked ? MF_CHECKED : MF_UNCHECKED) | MF_BYPOSITION);
+				break;
+			}
+		}
+	}
+}
 
 void Notepad_plus::launchProjectPanel(int cmdID, ProjectPanel ** pProjPanel, int panelID)
 {
@@ -6125,6 +6163,10 @@ void Notepad_plus::launchProjectPanel(int cmdID, ProjectPanel ** pProjPanel, int
 			(*pProjPanel)->openWorkSpace(nppParam.getWorkSpaceFilePath(panelID));
 	}
 	(*pProjPanel)->display();
+
+	checkMenuItem(cmdID, true);
+	checkProjectMenuItem();
+	(*pProjPanel)->setClosed(false);
 }
 
 

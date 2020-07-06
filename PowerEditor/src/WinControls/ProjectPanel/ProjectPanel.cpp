@@ -399,8 +399,6 @@ bool ProjectPanel::openWorkSpace(const TCHAR *projectFileName)
 	_treeView.removeAllItems();
 	_workSpaceFilePath = projectFileName;
 
-	NativeLangSpeaker *pNativeSpeaker = (NppParameters::getInstance()).getNativeLangSpeaker();
-	generic_string workspace = pNativeSpeaker->getAttrNameStr(PM_WORKSPACEROOTNAME, "ProjectManager", "WorkspaceRootName");
 	TCHAR * fileName = PathFindFileName(projectFileName);
 	HTREEITEM rootItem = _treeView.addItem(fileName, TVI_ROOT, INDEX_CLEAN_ROOT);
 
