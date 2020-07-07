@@ -806,17 +806,17 @@ bool Notepad_plus::saveProjectPanelsParams()
 {
 	if (_pProjectPanel_1)
 	{
-		_pProjectPanel_1->checkIfNeedSave(TEXT("Project Panel 1"));
+		if (!_pProjectPanel_1->checkIfNeedSave()) return false;
 		(NppParameters::getInstance()).setWorkSpaceFilePath(0, _pProjectPanel_1->getWorkSpaceFilePath());
 	}
 	if (_pProjectPanel_2)
 	{
-		_pProjectPanel_2->checkIfNeedSave(TEXT("Project Panel 2"));
+		if (!_pProjectPanel_2->checkIfNeedSave()) return false;
 		(NppParameters::getInstance()).setWorkSpaceFilePath(1, _pProjectPanel_2->getWorkSpaceFilePath());
 	}
 	if (_pProjectPanel_3)
 	{
-		_pProjectPanel_3->checkIfNeedSave(TEXT("Project Panel 3"));
+		if (!_pProjectPanel_3->checkIfNeedSave()) return false;
 		(NppParameters::getInstance()).setWorkSpaceFilePath(2, _pProjectPanel_3->getWorkSpaceFilePath());
 	}
 	return (NppParameters::getInstance()).writeProjectPanelsSettings();
@@ -6139,13 +6139,11 @@ void Notepad_plus::launchProjectPanel(int cmdID, ProjectPanel ** pProjPanel, int
 		NativeLangSpeaker *pNativeSpeaker = (NppParameters::getInstance()).getNativeLangSpeaker();
 		generic_string title_no = to_wstring (panelID + 1);
 		generic_string title_temp = pNativeSpeaker->getAttrNameStr(PM_PROJECTPANELTITLE, "ProjectManager", "PanelTitle") + TEXT(" ") + title_no;
-
-		static TCHAR title[4][32]; // 3 Project panels, 1 garbage can
-		int idx = ((panelID >= 0) && (panelID < (_countof(title)-1))) ? panelID : (_countof(title)-1);
-		generic_strncpy(title[idx], title_temp.c_str(), _countof(title[idx]));
-		data.pszName = title[idx];
+		(*pProjPanel)->setPanelTitle(title_temp);
+		data.pszName = (*pProjPanel)->getPanelTitle();
 
 		static TCHAR tab[4][12];
+		int idx = ((panelID >= 0) && (panelID < (_countof(tab)-1))) ? panelID : (_countof(tab)-1);
 		generic_strncpy(tab[idx], title_no.c_str(), _countof(tab[idx]));
 		data.pszShortName = tab[idx];
 

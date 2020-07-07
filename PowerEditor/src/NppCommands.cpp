@@ -696,12 +696,15 @@ void Notepad_plus::command(int id)
 			{
 				if (not (*pp[idx])->isClosed())
 				{
-					if (::IsChild((*pp[idx])->getHSelf(), ::GetFocus()))
-						::SetFocus(_pEditView->getHSelf());
-					(*pp[idx])->display(false);
-					(*pp[idx])->setClosed(true);
-					checkMenuItem(id, false);
-					checkProjectMenuItem();
+					if ((*pp[idx])->checkIfNeedSave())
+					{
+						if (::IsChild((*pp[idx])->getHSelf(), ::GetFocus()))
+							::SetFocus(_pEditView->getHSelf());
+						(*pp[idx])->display(false);
+						(*pp[idx])->setClosed(true);
+						checkMenuItem(id, false);
+						checkProjectMenuItem();
+					}
 				}
 				else
 				{

@@ -84,6 +84,13 @@ public:
 		_hParent = parent2set;
 	};
 
+	void setPanelTitle(generic_string title) {
+		_panelTitle = title;
+	};
+	const TCHAR * getPanelTitle() const {
+		return _panelTitle.c_str();
+	};
+
 	void newWorkSpace();
 	bool saveWorkspaceRequest();
 	bool openWorkSpace(const TCHAR *projectFileName);
@@ -98,7 +105,7 @@ public:
 	bool isDirty() const {
 		return _isDirty;
 	};
-	void checkIfNeedSave(const TCHAR *title);
+	bool checkIfNeedSave();
 
 	virtual void setBackgroundColor(COLORREF bgColour) {
 		TreeView_SetBkColor(_treeView.getHSelf(), bgColour);
@@ -117,6 +124,7 @@ protected:
 	HMENU _hProjectMenu = nullptr;
 	HMENU _hFolderMenu = nullptr;
 	HMENU _hFileMenu = nullptr;
+	generic_string _panelTitle;
 	generic_string _workSpaceFilePath;
 	generic_string _selDirOfFilesFromDirDlg;
 	bool _isDirty = false;

@@ -185,18 +185,17 @@ INT_PTR CALLBACK ProjectPanel::run_dlgProc(UINT message, WPARAM wParam, LPARAM l
 	return DockingDlgInterface::run_dlgProc(message, wParam, lParam);
 }
 
-void ProjectPanel::checkIfNeedSave(const TCHAR *title)
+bool ProjectPanel::checkIfNeedSave()
 {
 	if (_isDirty)
 	{
-		display();
-		
+		const TCHAR * title = _workSpaceFilePath.length() > 0 ? PathFindFileName (_workSpaceFilePath.c_str()) : _panelTitle.c_str();
 		NativeLangSpeaker *pNativeSpeaker = (NppParameters::getInstance()).getNativeLangSpeaker();
 		int res = pNativeSpeaker->messageBox("ProjectPanelChanged",
 			_hSelf,
 			TEXT("The workspace was modified. Do you want to save it?"),
 			TEXT("$STR_REPLACE$"),
-			MB_YESNO | MB_ICONQUESTION,
+			MB_YESNOCANCEL | MB_ICONQUESTION,
 			0,
 			title);
 
@@ -211,9 +210,18 @@ void ProjectPanel::checkIfNeedSave(const TCHAR *title)
 					0,
 					title);
 		}
-		//else if (res == IDNO)
+		else if (res == IDNO)
+		{
 			// Don't save so do nothing here
+			setWorkSpaceDirty(false);
+		}
+		else
+		{
+			// Cancelled
+			return false;
+		}
 	}
+	return true;
 }
 
 void ProjectPanel::initMenus()
@@ -433,7 +441,6 @@ bool ProjectPanel::saveWorkSpace()
 	{
 		writeWorkSpace();
 		setWorkSpaceDirty(false);
-		_isDirty = false;
 		return true;
 	} 
 }
@@ -456,7 +463,7 @@ bool ProjectPanel::writeWorkSpace(TCHAR *projectFileName)
     if (!tvRoot)
       return false;
 
-	TCHAR * fileName = PathFindFileName(projectFileName);
+	TCHAR * fileName = PathFindFileName(fn2write);
 	_treeView.renameItem(tvRoot, fileName);
 
     for (HTREEITEM tvProj = _treeView.getChildFrom(tvRoot);
@@ -629,7 +636,12 @@ void ProjectPanel::openSelectFile()
 
 void ProjectPanel::notified(LPNMHDR notification)
 {
-	if ((notification->hwndFrom == _treeView.getHSelf()))
+	if (notification->code == DMN_CLOSE)
+	{
+		::SendMessage(_hParent, WM_COMMAND, IDM_VIEW_PROJECT_PANEL_1 + _panelID, 0);
+		SetWindowLongPtr (getHSelf(), DWLP_MSGRESULT, _isClosed ? 0 : 1);
+	}
+	else if ((notification->hwndFrom == _treeView.getHSelf()))
 	{
 		TCHAR textBuffer[MAX_PATH];
 		TVITEM tvItem;
