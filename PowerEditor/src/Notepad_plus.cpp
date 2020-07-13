@@ -6157,8 +6157,7 @@ void Notepad_plus::launchProjectPanel(int cmdID, ProjectPanel ** pProjPanel, int
 	}
 	else
 	{
-		if ((*pProjPanel)->saveWorkspaceRequest())
-			(*pProjPanel)->openWorkSpace(nppParam.getWorkSpaceFilePath(panelID));
+		(*pProjPanel)->openWorkSpace(nppParam.getWorkSpaceFilePath(panelID));
 	}
 	(*pProjPanel)->display();
 

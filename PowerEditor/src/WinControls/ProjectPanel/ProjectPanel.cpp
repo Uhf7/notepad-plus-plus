@@ -99,7 +99,7 @@ INT_PTR CALLBACK ProjectPanel::run_dlgProc(UINT message, WPARAM wParam, LPARAM l
 			_treeView.addCanNotDragOutList(INDEX_PROJECT);
 
 			_treeView.display();
-			if (!openWorkSpace(_workSpaceFilePath.c_str()))
+			if (!openWorkSpace(_workSpaceFilePath.c_str(), true))
 				newWorkSpace();
 
             return TRUE;
@@ -213,7 +213,6 @@ bool ProjectPanel::checkIfNeedSave()
 		else if (res == IDNO)
 		{
 			// Don't save so do nothing here
-			setWorkSpaceDirty(false);
 		}
 		else
 		{
@@ -373,8 +372,17 @@ void ProjectPanel::destroyMenus()
 	::DestroyMenu(_hFileMenu);
 }
 
-bool ProjectPanel::openWorkSpace(const TCHAR *projectFileName)
+bool ProjectPanel::openWorkSpace(const TCHAR *projectFileName, bool force)
 {
+	if ((!force) && (_workSpaceFilePath.length() > 0))
+	{ // Return if it is better to keep the current workspace tree
+		generic_string newWorkspace = projectFileName;
+		if (newWorkspace == _workSpaceFilePath)
+			return true;
+		if (!saveWorkspaceRequest())
+			return true;
+	}
+
 	TiXmlDocument *pXmlDocProject = new TiXmlDocument(projectFileName);
 	bool loadOkay = pXmlDocProject->LoadFile();
 	if (!loadOkay)
@@ -1071,7 +1079,7 @@ void ProjectPanel::popupMenuCmd(int cmdID)
 			setFileExtFilter(fDlg);
 			if (TCHAR *fn = fDlg.doOpenSingleFileDlg())
 			{
-				if (!openWorkSpace(fn))
+				if (!openWorkSpace(fn, true))
 				{
 					NativeLangSpeaker *pNativeSpeaker = (NppParameters::getInstance()).getNativeLangSpeaker();
 					pNativeSpeaker->messageBox("ProjectPanelOpenFailed",
