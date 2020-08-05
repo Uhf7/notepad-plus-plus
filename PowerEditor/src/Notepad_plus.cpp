@@ -323,6 +323,10 @@ LRESULT Notepad_plus::init(HWND hwnd)
 	_mainEditView.execute(SCI_SETMULTIPASTE, SC_MULTIPASTE_EACH);
 	_subEditView.execute(SCI_SETMULTIPASTE, SC_MULTIPASTE_EACH);
 
+	// allow user to start selecting as a stream block, then switch to a column block by adding Alt keypress
+	_mainEditView.execute(SCI_SETMOUSESELECTIONRECTANGULARSWITCH, true);
+	_subEditView.execute(SCI_SETMOUSESELECTIONRECTANGULARSWITCH, true);
+
 	// Let Scintilla deal with some of the folding functionality
 	_mainEditView.execute(SCI_SETAUTOMATICFOLD, SC_AUTOMATICFOLD_SHOW);
 	_subEditView.execute(SCI_SETAUTOMATICFOLD, SC_AUTOMATICFOLD_SHOW);
@@ -1427,14 +1431,17 @@ void Notepad_plus::removeDuplicateLines()
 
 	env._str2Search = TEXT("^(.*(\\r?\\n|\\r))(\\1)+");
 	env._str4Replace = TEXT("\\1");
-    env._searchType = FindRegex;
-	_findReplaceDlg.processAll(ProcessReplaceAll, &env, true);
+	env._searchType = FindRegex;
+	auto mainSelStart = _pEditView->execute(SCI_GETSELECTIONSTART);
+	auto mainSelEnd = _pEditView->execute(SCI_GETSELECTIONEND);
+	auto mainSelLength = mainSelEnd - mainSelStart;
+	bool isEntireDoc = mainSelLength == 0;
+	env._isInSelection = !isEntireDoc;
+	_findReplaceDlg.processAll(ProcessReplaceAll, &env, isEntireDoc);
 
 	// remove the last line if it's a duplicate line.
 	env._str2Search = TEXT("^(.+)(\\r?\\n|\\r)(\\1)$");
-	env._str4Replace = TEXT("\\1");
-    env._searchType = FindRegex;
-	_findReplaceDlg.processAll(ProcessReplaceAll, &env, true);
+	_findReplaceDlg.processAll(ProcessReplaceAll, &env, isEntireDoc);
 }
 
 void Notepad_plus::getMatchedFileNames(const TCHAR *dir, const vector<generic_string> & patterns, vector<generic_string> & fileNames, bool isRecursive, bool isInHiddenDir)
