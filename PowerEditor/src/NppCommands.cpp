@@ -551,6 +551,7 @@ void Notepad_plus::command(int id)
 		case IDM_EDIT_SORTLINES_DECIMALCOMMA_DESCENDING:
 		case IDM_EDIT_SORTLINES_DECIMALDOT_ASCENDING:
 		case IDM_EDIT_SORTLINES_DECIMALDOT_DESCENDING:
+		case IDM_EDIT_SORTLINES_RANDOMLY:
 		{
 			std::lock_guard<std::mutex> lock(command_mutex);
 
@@ -620,9 +621,13 @@ void Notepad_plus::command(int id)
 			{
 				pSorter = std::unique_ptr<ISorter>(new DecimalCommaSorter(isDescending, fromColumn, toColumn));
 			}
-			else
+			else if (id == IDM_EDIT_SORTLINES_DECIMALDOT_DESCENDING || id == IDM_EDIT_SORTLINES_DECIMALDOT_ASCENDING)
 			{
 				pSorter = std::unique_ptr<ISorter>(new DecimalDotSorter(isDescending, fromColumn, toColumn));
+			}
+			else
+			{
+				pSorter = std::unique_ptr<ISorter>(new RandomSorter(isDescending, fromColumn, toColumn));
 			}
 			try
 			{
@@ -3470,6 +3475,7 @@ void Notepad_plus::command(int id)
 			case IDM_EDIT_SORTLINES_DECIMALCOMMA_DESCENDING:
 			case IDM_EDIT_SORTLINES_DECIMALDOT_ASCENDING:
 			case IDM_EDIT_SORTLINES_DECIMALDOT_DESCENDING:
+			case IDM_EDIT_SORTLINES_RANDOMLY:
 			case IDM_EDIT_BLANKLINEABOVECURRENT:
 			case IDM_EDIT_BLANKLINEBELOWCURRENT:
 			case IDM_VIEW_FULLSCREENTOGGLE :
