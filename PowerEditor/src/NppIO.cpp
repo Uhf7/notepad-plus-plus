@@ -1248,6 +1248,7 @@ bool Notepad_plus::fileCloseAllButCurrent()
 {
 	BufferID current = _pEditView->getCurrentBufferID();
 	const int activeViewID = currentView();
+	int active = _pDocTab->getCurrentTabIndex();
 	bool noSaveToAll = false;
 	bool saveToAll = false;
 	std::vector<unsigned int> mainSaveOpIndex, subSaveOpIndex;
@@ -1421,7 +1422,6 @@ bool Notepad_plus::fileCloseAllButCurrent()
     }
 
 	const int viewNo = currentView();
-	int active = _pDocTab->getCurrentTabIndex();
 	size_t nbItems = _pDocTab->nbItem();
 	activateBuffer(_pDocTab->getBufferByIndex(0), viewNo);
 	
