@@ -53,7 +53,7 @@ struct WinMenuKeyDefinition //more or less matches accelerator table definition,
 	bool isCtrl;
 	bool isAlt;
 	bool isShift;
-	const TCHAR * specialName;		//Used when no real menu name exists (in case of toggle for example)
+	const TCHAR * specialName; // Used when no real menu name exists (in case of toggle for example)
 };
 
 
@@ -296,9 +296,9 @@ static const WinMenuKeyDefinition winKeyDefs[] =
 	{ VK_7,       IDM_VIEW_UNFOLD_7,                            false, true,  true,  nullptr },
 	{ VK_8,       IDM_VIEW_UNFOLD_8,                            false, true,  true,  nullptr },
 	{ VK_NULL,    IDM_VIEW_SUMMARY,                             false, false, false, nullptr },
-	{ VK_NULL,    IDM_VIEW_PROJECT_PANEL_1,                     false, false, false, nullptr },
-	{ VK_NULL,    IDM_VIEW_PROJECT_PANEL_2,                     false, false, false, nullptr },
-	{ VK_NULL,    IDM_VIEW_PROJECT_PANEL_3,                     false, false, false, nullptr },
+	{ VK_NULL,    IDM_VIEW_PROJECT_PANEL_1,                     false, false, false, TEXT("Toggle Project Panel 1")},
+	{ VK_NULL,    IDM_VIEW_PROJECT_PANEL_2,                     false, false, false, TEXT("Toggle Project Panel 2")},
+	{ VK_NULL,    IDM_VIEW_PROJECT_PANEL_3,                     false, false, false, TEXT("Toggle Project Panel 3")},
 	{ VK_NULL,    IDM_VIEW_FILEBROWSER,                         false, false, false, nullptr },
 	{ VK_NULL,    IDM_VIEW_DOC_MAP,                             false, false, false, nullptr },
 	{ VK_NULL,    IDM_VIEW_FUNC_LIST,                           false, false, false, nullptr },

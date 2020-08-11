@@ -551,28 +551,8 @@ LRESULT Notepad_plus::init(HWND hwnd)
 		}
 	}
 
-	//Input all the menu item names into shortcut list
-	//This will automatically do all translations, since menu translation has been done already
-	vector<CommandShortcut> & shortcuts = nppParam.getUserShortcuts();
-	len = shortcuts.size();
+	updateCommandShortcuts();
 
-	for (size_t i = 0; i < len; ++i)
-	{
-		CommandShortcut & csc = shortcuts[i];
-		if (!csc.getName()[0])
-		{	//no predefined name, get name from menu and use that
-			::GetMenuString(_mainMenuHandle, csc.getID(), menuName, 64, MF_BYCOMMAND);
-			csc.setName(purgeMenuItemString(menuName, true).c_str());
-		}
-		else
-		{
-			// The menu name is already present (e.g. "Restore recent close file")
-			// Now get the localized name if possible
-			generic_string localizedMenuName = _nativeLangSpeaker.getNativeLangMenuString(csc.getID());
-			if(!localizedMenuName.empty())
-				csc.setName(purgeMenuItemString(localizedMenuName.c_str(), true).c_str());
-		}
-	}
 	//Translate non-menu shortcuts
 	_nativeLangSpeaker.changeShortcutLang();
 
@@ -5784,25 +5764,8 @@ bool Notepad_plus::reloadLang()
 		}
 	}
 
-	vector<CommandShortcut> & shortcuts = nppParam.getUserShortcuts();
-	len = shortcuts.size();
+	updateCommandShortcuts();
 
-	for (size_t i = 0; i < len; ++i)
-	{
-		CommandShortcut & csc = shortcuts[i];
-		// If menu item is not present (e.g. "Restore recent close file" might not present initially)
-		// then fill the localized string directly
-		if (::GetMenuString(_mainMenuHandle, csc.getID(), menuName, 64, MF_BYCOMMAND))
-		{
-			csc.setName(purgeMenuItemString(menuName, true).c_str());
-		}
-		else
-		{
-			generic_string localizedMenuName = _nativeLangSpeaker.getNativeLangMenuString(csc.getID());
-			if (!localizedMenuName.empty())
-				csc.setName(purgeMenuItemString(localizedMenuName.c_str(), true).c_str());
-		}
-	}
 	_accelerator.updateFullMenu();
 
 	_scintaccelerator.updateKeys();
@@ -7125,5 +7088,54 @@ void Notepad_plus::monitoringStartOrStopAndUpdateUI(Buffer* pBuf, bool isStartin
 		checkMenuItem(IDM_VIEW_MONITORING, isStarting);
 		_toolBar.setCheck(IDM_VIEW_MONITORING, isStarting);
 		pBuf->setUserReadOnly(isStarting);
+	}
+}
+
+// Fill names into the shortcut list.
+// Each command shortcut has two names:
+// - The menu name, to be displayed in the menu
+// - The shortcut name, to be displayed in the shortcut list
+//
+// The names are filled in with the following priorities:
+// - The menu name
+//   1. "name" attribute from localization file.
+//   2. name from the menu resource in Notepad_plus.rc
+//   3. name from the winKeyDefs[] table in Parameter.cpp
+//
+// - The shortcut name
+//   1. "shortcut" attribute from the localization file
+//   2. "name" attribute from the localization file
+//   3. name from the menu resource in Notepad_plus.rc
+//   4. name from the winKeyDefs[] table in Parameter.cpp
+
+void Notepad_plus::updateCommandShortcuts()
+{
+	NppParameters& nppParam = NppParameters::getInstance();
+	vector<CommandShortcut> & shortcuts = nppParam.getUserShortcuts();
+	size_t len = shortcuts.size();
+
+	for (size_t i = 0; i < len; ++i)
+	{
+		CommandShortcut & csc = shortcuts[i];
+		unsigned long id = csc.getID();
+		generic_string localizedMenuName = _nativeLangSpeaker.getNativeLangMenuString(id);
+		if (localizedMenuName.length() == 0)
+		{	// No "name" attribute for this id in the localization file. Use name from menu resource.
+			TCHAR menuName[64];
+			if (::GetMenuString(_mainMenuHandle, csc.getID(), menuName, _countof(menuName), MF_BYCOMMAND))
+			{
+				generic_string menuNamePurged = purgeMenuItemString(menuName, true);
+				csc.setName(menuNamePurged.c_str(), csc.getName()[0] ? csc.getName() : menuNamePurged.c_str());
+			}
+			// If not even a menu string is available, then the command shortcut keeps the name from the winKeyDefs[] table in Parameter.cpp
+			// If this is empty, then the command shortcut has no name. It cannot be in the menu then neither.
+		}
+		else
+		{	// At least the "name" attribute has been found in the localization file.
+			// getNativeLangMenuString checks the "shortcut" attribute, and if this is not available, it gives back the "name" attribute.
+			// Purging is not necessary here, both names come directly from the localization file.
+			generic_string localizedName = _nativeLangSpeaker.getNativeLangMenuString(id, true);
+			csc.setName(localizedMenuName.c_str(), localizedName.c_str());
+		}
 	}
 }

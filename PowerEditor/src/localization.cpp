@@ -177,7 +177,7 @@ generic_string NativeLangSpeaker::getSpecialMenuEntryName(const char *entryName)
 	return TEXT("");
 }
 
-generic_string NativeLangSpeaker::getNativeLangMenuString(int itemID) const
+generic_string NativeLangSpeaker::getNativeLangMenuString(int itemID, bool preferShortcutName) const
 {
 	if (!_nativeLangA)
 		return TEXT("");
@@ -201,6 +201,15 @@ generic_string NativeLangSpeaker::getNativeLangMenuString(int itemID) const
 		int id;
 		if (element->Attribute("id", &id) && (id == itemID))
 		{
+			if (preferShortcutName)
+			{
+				const char *shortcutName = element->Attribute("shortcut");
+				if (shortcutName)
+				{
+				return wmc.char2wchar(shortcutName, _nativeLangEncoding);
+				}
+			}
+
 			const char *name = element->Attribute("name");
 			if (name)
 			{
