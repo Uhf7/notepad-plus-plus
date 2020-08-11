@@ -32,7 +32,7 @@
 #include "TreeView.h"
 #include "ProjectPanel_rc.h"
 
-#define PM_PROJECTPANELTITLE     TEXT("Project")
+#define PM_PROJECTPANELTITLE     TEXT("Project Panel")
 #define PM_WORKSPACEROOTNAME     TEXT("Workspace")
 #define PM_NEWFOLDERNAME         TEXT("Folder Name")
 #define PM_NEWPROJECTNAME        TEXT("Project Name")

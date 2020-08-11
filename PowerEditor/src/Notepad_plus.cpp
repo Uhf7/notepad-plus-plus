@@ -6148,12 +6148,6 @@ void Notepad_plus::launchProjectPanel(int cmdID, ProjectPanel ** pProjPanel, int
 		generic_string title_temp = pNativeSpeaker->getAttrNameStr(PM_PROJECTPANELTITLE, "ProjectManager", "PanelTitle") + TEXT(" ") + title_no;
 		(*pProjPanel)->setPanelTitle(title_temp);
 		data.pszName = (*pProjPanel)->getPanelTitle();
-
-		static TCHAR tab[4][12];
-		int idx = ((panelID >= 0) && (panelID < (_countof(tab)-1))) ? panelID : (_countof(tab)-1);
-		generic_strncpy(tab[idx], title_no.c_str(), _countof(tab[idx]));
-		data.pszShortName = tab[idx];
-
 		::SendMessage(_pPublicInterface->getHSelf(), NPPM_DMMREGASDCKDLG, 0, reinterpret_cast<LPARAM>(&data));
 
 		COLORREF fgColor = (NppParameters::getInstance()).getCurrentDefaultFgColor();
