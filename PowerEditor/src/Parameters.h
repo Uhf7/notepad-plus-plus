@@ -803,6 +803,8 @@ struct NppGUI final
 	int _tabSize = 4;
 	bool _tabReplacedBySpace = false;
 
+	bool _finderLinesAreCurrentlyWrapped = false;
+
 	int _fileAutoDetection = cdEnabledNew;
 
 	bool _checkHistoryFiles = false;
@@ -836,6 +838,8 @@ struct NppGUI final
 	bool _backSlashIsEscapeCharacterForSql = true;
 	bool _stopFillingFindField = false;
 	bool _monospacedFontFindDlg = false;
+	bool _findDlgAlwaysVisible = false;
+	bool _confirmReplaceInAllOpenDocs = true;
 	writeTechnologyEngine _writeTechnologyEngine = defaultTechnology;
 	bool _isWordCharDefault = true;
 	std::string _customWordChars;
@@ -1174,7 +1178,6 @@ struct FindHistory final
 	transparencyMode _transparencyMode = onLossingFocus;
 	int _transparency = 150;
 
-	bool _isDlgAlwaysVisible = false;
 	bool _isFilterFollowDoc = false;
 	bool _isFolderFollowDoc = false;
 

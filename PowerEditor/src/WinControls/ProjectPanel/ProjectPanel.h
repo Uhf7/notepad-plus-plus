@@ -76,13 +76,13 @@ public:
 		_panelID = panelID;
 	}
 
-	virtual void display(bool toShow = true) const {
-		DockingDlgInterface::display(toShow);
-	};
+    virtual void display(bool toShow = true) const {
+        DockingDlgInterface::display(toShow);
+    };
 
-	void setParent(HWND parent2set){
-		_hParent = parent2set;
-	};
+    void setParent(HWND parent2set){
+        _hParent = parent2set;
+    };
 
 	void setPanelTitle(generic_string title) {
 		_panelTitle = title;
@@ -109,10 +109,10 @@ public:
 
 	virtual void setBackgroundColor(COLORREF bgColour) {
 		TreeView_SetBkColor(_treeView.getHSelf(), bgColour);
-	};
+    };
 	virtual void setForegroundColor(COLORREF fgColour) {
 		TreeView_SetTextColor(_treeView.getHSelf(), fgColour);
-	};
+    };
 	bool enumWorkSpaceFiles(HTREEITEM tvFrom, const std::vector<generic_string> & patterns, std::vector<generic_string> & fileNames);
 
 
@@ -128,7 +128,7 @@ protected:
 	generic_string _workSpaceFilePath;
 	generic_string _selDirOfFilesFromDirDlg;
 	bool _isDirty = false;
-    int _panelID = 0;
+	int _panelID = 0;
 
 	void initMenus();
 	void destroyMenus();

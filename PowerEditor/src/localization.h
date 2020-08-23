@@ -57,7 +57,9 @@ public:
 	bool changeDlgLang(HWND hDlg, const char *dlgTagName, char *title = NULL, size_t titleMaxSize = 0);
 	void changeLangTabDrapContextMenu(HMENU hCM);
 	generic_string getSpecialMenuEntryName(const char *entryName) const;
-	generic_string getNativeLangMenuString(int itemID, bool preferShortcutName = false) const;
+	generic_string getNativeLangMenuString(int itemID) const;
+	generic_string getShortcutNameString(int itemID) const;
+
 	void changeMenuLang(HMENU menuHandle, generic_string & pluginsTrans, generic_string & windowTrans);
 	void changeShortcutLang();
 	void changeStyleCtrlsLang(HWND hDlg, int *idArray, const char **translatedText);

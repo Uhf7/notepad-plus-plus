@@ -133,6 +133,7 @@ public:
 	void setFinderStyle();
 	void removeAll();
 	void openAll();
+	void wrapLongLinesToggle();
 	void copy();
 	void beginNewFilesSearch();
 	void finishFilesSearch(int count, int searchedCount, bool isMatchLines, bool searchedEntireNotSelection);
@@ -169,6 +170,7 @@ private:
 
 	bool _canBeVolatiled = true;
 
+	bool _longLinesAreWrapped = false;
 
 	void setFinderReadOnly(bool isReadOnly) {
 		_scintView.execute(SCI_SETREADONLY, isReadOnly);

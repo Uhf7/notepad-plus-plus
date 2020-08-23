@@ -177,7 +177,7 @@ generic_string NativeLangSpeaker::getSpecialMenuEntryName(const char *entryName)
 	return TEXT("");
 }
 
-generic_string NativeLangSpeaker::getNativeLangMenuString(int itemID, bool preferShortcutName) const
+generic_string NativeLangSpeaker::getNativeLangMenuString(int itemID) const
 {
 	if (!_nativeLangA)
 		return TEXT("");
@@ -201,15 +201,40 @@ generic_string NativeLangSpeaker::getNativeLangMenuString(int itemID, bool prefe
 		int id;
 		if (element->Attribute("id", &id) && (id == itemID))
 		{
-			if (preferShortcutName)
+			const char *name = element->Attribute("name");
+			if (name)
 			{
-				const char *shortcutName = element->Attribute("shortcut");
-				if (shortcutName)
-				{
-				return wmc.char2wchar(shortcutName, _nativeLangEncoding);
-				}
+				return wmc.char2wchar(name, _nativeLangEncoding);
 			}
+		}
+	}
+	return TEXT("");
+}
 
+generic_string NativeLangSpeaker::getShortcutNameString(int itemID) const
+{
+	if (!_nativeLangA)
+		return TEXT("");
+
+	TiXmlNodeA *node = _nativeLangA->FirstChild("Dialog");
+	if (!node) return TEXT("");
+
+	node = node->FirstChild("ShortcutMapper");
+	if (!node) return TEXT("");
+
+	node = node->FirstChild("MainCommandNames");
+	if (!node) return TEXT("");
+
+	WcharMbcsConvertor& wmc = WcharMbcsConvertor::getInstance();
+
+	for (TiXmlNodeA *childNode = node->FirstChildElement("Item");
+		childNode ;
+		childNode = childNode->NextSibling("Item") )
+	{
+		TiXmlElementA *element = childNode->ToElement();
+		int id;
+		if (element->Attribute("id", &id) && (id == itemID))
+		{
 			const char *name = element->Attribute("name");
 			if (name)
 			{
@@ -1332,6 +1357,10 @@ int NativeLangSpeaker::messageBox(const char *msgBoxTagName, HWND hWnd, const TC
 	{
 		title = stringReplace(title, TEXT("$STR_REPLACE$"), strInfo);
 		msg = stringReplace(msg, TEXT("$STR_REPLACE$"), strInfo);
+	}
+	if (_isRTL)
+	{
+		msgBoxType |= MB_RTLREADING | MB_RIGHT;
 	}
 	return ::MessageBox(hWnd, msg.c_str(), title.c_str(), msgBoxType);
 }

@@ -198,10 +198,12 @@ public:
 	unsigned long getID() const {return _id;};
 	void setID(unsigned long id) { _id = id;};
 	const TCHAR * getCategory() const { return _category.c_str(); };
+	const TCHAR * getShortcutName() const { return _shortcutName.c_str(); };
 
 private :
 	unsigned long _id;
 	generic_string _category;
+	generic_string _shortcutName;
 };
 
 

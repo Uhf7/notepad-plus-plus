@@ -53,7 +53,7 @@ struct WinMenuKeyDefinition //more or less matches accelerator table definition,
 	bool isCtrl;
 	bool isAlt;
 	bool isShift;
-	const TCHAR * specialName; // Used when no real menu name exists (in case of toggle for example)
+	const TCHAR * specialName;		//Used when no real menu name exists (in case of toggle for example)
 };
 
 
@@ -81,8 +81,8 @@ static const WinMenuKeyDefinition winKeyDefs[] =
 	//
 	{ VK_N,       IDM_FILE_NEW,                                 true,  false, false, nullptr },
 	{ VK_O,       IDM_FILE_OPEN,                                true,  false, false, nullptr },
-	{ VK_NULL,    IDM_FILE_OPEN_FOLDER,                         false, false, false, nullptr },
-	{ VK_NULL,    IDM_FILE_OPEN_CMD,                            false, false, false, nullptr },
+	{ VK_NULL,    IDM_FILE_OPEN_FOLDER,                         false, false, false, TEXT("Open containing folder in Explorer") },
+	{ VK_NULL,    IDM_FILE_OPEN_CMD,                            false, false, false, TEXT("Open containing folder in Command Prompt") },
 	{ VK_NULL,    IDM_FILE_OPEN_DEFAULT_VIEWER,                 false, false, false, nullptr },
 	{ VK_NULL,    IDM_FILE_OPENFOLDERASWORSPACE,                false, false, false, nullptr },
 	{ VK_R,       IDM_FILE_RELOAD,                              true,  false, false, nullptr },
@@ -117,8 +117,8 @@ static const WinMenuKeyDefinition winKeyDefs[] =
 	{ VK_NULL,    IDM_EDIT_FULLPATHTOCLIP,                      false, false, false, nullptr },
 	{ VK_NULL,    IDM_EDIT_FILENAMETOCLIP,                      false, false, false, nullptr },
 	{ VK_NULL,    IDM_EDIT_CURRENTDIRTOCLIP,                    false, false, false, nullptr },
-//	{ VK_NULL,    IDM_EDIT_INS_TAB,                             false, false, false, nullptr },
-//	{ VK_NULL,    IDM_EDIT_RMV_TAB,                             false, false, false, nullptr },
+	{ VK_NULL,    IDM_EDIT_INS_TAB,                             false, false, false, nullptr },
+	{ VK_NULL,    IDM_EDIT_RMV_TAB,                             false, false, false, nullptr },
 	{ VK_U,       IDM_EDIT_UPPERCASE,                           true,  false, true,  nullptr },
 	{ VK_U,       IDM_EDIT_LOWERCASE,                           true,  false, false, nullptr },
 	{ VK_U,       IDM_EDIT_PROPERCASE_FORCE,                    false, true,  false, nullptr },
@@ -154,9 +154,9 @@ static const WinMenuKeyDefinition winKeyDefs[] =
 	{ VK_SPACE,   IDM_EDIT_AUTOCOMPLETE_PATH,                   true,  true,  false, nullptr },
 	{ VK_RETURN,  IDM_EDIT_AUTOCOMPLETE_CURRENTFILE,            true,  false, false, nullptr },
 	{ VK_SPACE,   IDM_EDIT_FUNCCALLTIP,                         true,  false, true,  nullptr },
-	{ VK_NULL,    IDM_FORMAT_TODOS,                             false, false, false, nullptr },
-	{ VK_NULL,    IDM_FORMAT_TOUNIX,                            false, false, false, nullptr },
-	{ VK_NULL,    IDM_FORMAT_TOMAC,                             false, false, false, nullptr },
+	{ VK_NULL,    IDM_FORMAT_TODOS,                             false, false, false, TEXT("EOL Conversion to Windows (CR LF)") },
+	{ VK_NULL,    IDM_FORMAT_TOUNIX,                            false, false, false, TEXT("EOL Conversion to Unix (LF)") },
+	{ VK_NULL,    IDM_FORMAT_TOMAC,                             false, false, false, TEXT("EOL Conversion to Macintosh (CR)") },
 	{ VK_NULL,    IDM_EDIT_TRIMTRAILING,                        false, false, false, nullptr },
 	{ VK_NULL,    IDM_EDIT_TRIMLINEHEAD,                        false, false, false, nullptr },
 	{ VK_NULL,    IDM_EDIT_TRIM_BOTH,                           false, false, false, nullptr },
@@ -197,29 +197,29 @@ static const WinMenuKeyDefinition winKeyDefs[] =
 	{ VK_B,       IDM_SEARCH_GOTOMATCHINGBRACE,                 true,  false, false, nullptr },
 	{ VK_B,       IDM_SEARCH_SELECTMATCHINGBRACES,              true,  true,  false, nullptr },
 	{ VK_M,       IDM_SEARCH_MARK,                              true,  false, false, nullptr },
-	{ VK_NULL,    IDM_SEARCH_MARKALLEXT1,                       false, false, false, nullptr },
-	{ VK_NULL,    IDM_SEARCH_MARKALLEXT2,                       false, false, false, nullptr },
-	{ VK_NULL,    IDM_SEARCH_MARKALLEXT3,                       false, false, false, nullptr },
-	{ VK_NULL,    IDM_SEARCH_MARKALLEXT4,                       false, false, false, nullptr },
-	{ VK_NULL,    IDM_SEARCH_MARKALLEXT5,                       false, false, false, nullptr },
-	{ VK_NULL,    IDM_SEARCH_UNMARKALLEXT1,                     false, false, false, nullptr },
-	{ VK_NULL,    IDM_SEARCH_UNMARKALLEXT2,                     false, false, false, nullptr },
-	{ VK_NULL,    IDM_SEARCH_UNMARKALLEXT3,                     false, false, false, nullptr },
-	{ VK_NULL,    IDM_SEARCH_UNMARKALLEXT4,                     false, false, false, nullptr },
-	{ VK_NULL,    IDM_SEARCH_UNMARKALLEXT5,                     false, false, false, nullptr },
-	{ VK_NULL,    IDM_SEARCH_CLEARALLMARKS,                     false, false, false, nullptr },
-	{ VK_1,       IDM_SEARCH_GOPREVMARKER1,                     true,  false, true,  nullptr },
-	{ VK_2,       IDM_SEARCH_GOPREVMARKER2,                     true,  false, true,  nullptr },
-	{ VK_3,       IDM_SEARCH_GOPREVMARKER3,                     true,  false, true,  nullptr },
-	{ VK_4,       IDM_SEARCH_GOPREVMARKER4,                     true,  false, true,  nullptr },
-	{ VK_5,       IDM_SEARCH_GOPREVMARKER5,                     true,  false, true,  nullptr },
-	{ VK_0,       IDM_SEARCH_GOPREVMARKER_DEF,                  true,  false, true,  nullptr },
-	{ VK_1,       IDM_SEARCH_GONEXTMARKER1,                     true,  false, false, nullptr },
-	{ VK_2,       IDM_SEARCH_GONEXTMARKER2,                     true,  false, false, nullptr },
-	{ VK_3,       IDM_SEARCH_GONEXTMARKER3,                     true,  false, false, nullptr },
-	{ VK_4,       IDM_SEARCH_GONEXTMARKER4,                     true,  false, false, nullptr },
-	{ VK_5,       IDM_SEARCH_GONEXTMARKER5,                     true,  false, false, nullptr },
-	{ VK_0,       IDM_SEARCH_GONEXTMARKER_DEF,                  true,  false, false, nullptr },
+	{ VK_NULL,    IDM_SEARCH_MARKALLEXT1,                       false, false, false, TEXT("Mark search results using 1st style") },
+	{ VK_NULL,    IDM_SEARCH_MARKALLEXT2,                       false, false, false, TEXT("Mark search results using 2nd style") },
+	{ VK_NULL,    IDM_SEARCH_MARKALLEXT3,                       false, false, false, TEXT("Mark search results using 3rd style") },
+	{ VK_NULL,    IDM_SEARCH_MARKALLEXT4,                       false, false, false, TEXT("Mark search results using 4th style") },
+	{ VK_NULL,    IDM_SEARCH_MARKALLEXT5,                       false, false, false, TEXT("Mark search results using 5th style") },
+	{ VK_NULL,    IDM_SEARCH_UNMARKALLEXT1,                     false, false, false, TEXT("Clear marks using 1st style") },
+	{ VK_NULL,    IDM_SEARCH_UNMARKALLEXT2,                     false, false, false, TEXT("Clear marks using 2nd style") },
+	{ VK_NULL,    IDM_SEARCH_UNMARKALLEXT3,                     false, false, false, TEXT("Clear marks using 3rd style") },
+	{ VK_NULL,    IDM_SEARCH_UNMARKALLEXT4,                     false, false, false, TEXT("Clear marks using 4th style") },
+	{ VK_NULL,    IDM_SEARCH_UNMARKALLEXT5,                     false, false, false, TEXT("Clear marks using 5th style") },
+	{ VK_NULL,    IDM_SEARCH_CLEARALLMARKS,                     false, false, false, TEXT("Clear marks using any style") },
+	{ VK_1,       IDM_SEARCH_GOPREVMARKER1,                     true,  false, true,  TEXT("Previous mark using 1st style") },
+	{ VK_2,       IDM_SEARCH_GOPREVMARKER2,                     true,  false, true,  TEXT("Previous mark using 2nd style") },
+	{ VK_3,       IDM_SEARCH_GOPREVMARKER3,                     true,  false, true,  TEXT("Previous mark using 3rd style") },
+	{ VK_4,       IDM_SEARCH_GOPREVMARKER4,                     true,  false, true,  TEXT("Previous mark using 4th style") },
+	{ VK_5,       IDM_SEARCH_GOPREVMARKER5,                     true,  false, true,  TEXT("Previous mark using 5th style") },
+	{ VK_0,       IDM_SEARCH_GOPREVMARKER_DEF,                  true,  false, true,  TEXT("Previous mark created with Mark...") },
+	{ VK_1,       IDM_SEARCH_GONEXTMARKER1,                     true,  false, false, TEXT("Next mark using 1st style") },
+	{ VK_2,       IDM_SEARCH_GONEXTMARKER2,                     true,  false, false, TEXT("Next mark using 2nd style") },
+	{ VK_3,       IDM_SEARCH_GONEXTMARKER3,                     true,  false, false, TEXT("Next mark using 3rd style") },
+	{ VK_4,       IDM_SEARCH_GONEXTMARKER4,                     true,  false, false, TEXT("Next mark using 4th style") },
+	{ VK_5,       IDM_SEARCH_GONEXTMARKER5,                     true,  false, false, TEXT("Next mark using 5th style") },
+	{ VK_0,       IDM_SEARCH_GONEXTMARKER_DEF,                  true,  false, false, TEXT("Next mark created with Mark...") },
 				 
 	{ VK_F2,      IDM_SEARCH_TOGGLE_BOOKMARK,                   true,  false, false, nullptr },
 	{ VK_F2,      IDM_SEARCH_NEXT_BOOKMARK,                     false, false, false, nullptr },
@@ -237,10 +237,10 @@ static const WinMenuKeyDefinition winKeyDefs[] =
 	{ VK_F11,     IDM_VIEW_FULLSCREENTOGGLE,                    false, false, false, nullptr },
 	{ VK_F12,     IDM_VIEW_POSTIT,                              false, false, false, nullptr },
 
-	{ VK_NULL,    IDM_VIEW_IN_FIREFOX,                          false, false, false, nullptr },
-	{ VK_NULL,    IDM_VIEW_IN_CHROME,                           false, false, false, nullptr },
-	{ VK_NULL,    IDM_VIEW_IN_IE,                               false, false, false, nullptr },
-	{ VK_NULL,    IDM_VIEW_IN_EDGE,                             false, false, false, nullptr },
+	{ VK_NULL,    IDM_VIEW_IN_FIREFOX,                          false, false, false, TEXT("View current file in Firefox") },
+	{ VK_NULL,    IDM_VIEW_IN_CHROME,                           false, false, false, TEXT("View current file in Chrome") },
+	{ VK_NULL,    IDM_VIEW_IN_IE,                               false, false, false, TEXT("View current file in IE") },
+	{ VK_NULL,    IDM_VIEW_IN_EDGE,                             false, false, false, TEXT("View current file in Edge")  },
 
 	{ VK_NULL,    IDM_VIEW_TAB_SPACE,                           false, false, false, nullptr },
 	{ VK_NULL,    IDM_VIEW_EOL,                                 false, false, false, nullptr },
@@ -278,30 +278,35 @@ static const WinMenuKeyDefinition winKeyDefs[] =
 	{ VK_0,       IDM_VIEW_TOGGLE_UNFOLDALL,                    false, true,  true,  nullptr },
 	{ VK_F,       IDM_VIEW_FOLD_CURRENT,                        true,  true,  false, nullptr },
 	{ VK_F,       IDM_VIEW_UNFOLD_CURRENT,                      true,  true,  true,  nullptr },
-	{ VK_1,       IDM_VIEW_FOLD_1,                              false, true,  false, nullptr },
-	{ VK_2,       IDM_VIEW_FOLD_2,                              false, true,  false, nullptr },
-	{ VK_3,       IDM_VIEW_FOLD_3,                              false, true,  false, nullptr },
-	{ VK_4,       IDM_VIEW_FOLD_4,                              false, true,  false, nullptr },
-	{ VK_5,       IDM_VIEW_FOLD_5,                              false, true,  false, nullptr },
-	{ VK_6,       IDM_VIEW_FOLD_6,                              false, true,  false, nullptr },
-	{ VK_7,       IDM_VIEW_FOLD_7,                              false, true,  false, nullptr },
-	{ VK_8,       IDM_VIEW_FOLD_8,                              false, true,  false, nullptr },
+	{ VK_1,       IDM_VIEW_FOLD_1,                              false, true,  false, TEXT("Collapse Level 1") },
+	{ VK_2,       IDM_VIEW_FOLD_2,                              false, true,  false, TEXT("Collapse Level 2") },
+	{ VK_3,       IDM_VIEW_FOLD_3,                              false, true,  false, TEXT("Collapse Level 3") },
+	{ VK_4,       IDM_VIEW_FOLD_4,                              false, true,  false, TEXT("Collapse Level 4") },
+	{ VK_5,       IDM_VIEW_FOLD_5,                              false, true,  false, TEXT("Collapse Level 5") },
+	{ VK_6,       IDM_VIEW_FOLD_6,                              false, true,  false, TEXT("Collapse Level 6") },
+	{ VK_7,       IDM_VIEW_FOLD_7,                              false, true,  false, TEXT("Collapse Level 7") },
+	{ VK_8,       IDM_VIEW_FOLD_8,                              false, true,  false, TEXT("Collapse Level 8") },
 
-	{ VK_1,       IDM_VIEW_UNFOLD_1,                            false, true,  true,  nullptr },
-	{ VK_2,       IDM_VIEW_UNFOLD_2,                            false, true,  true,  nullptr },
-	{ VK_3,       IDM_VIEW_UNFOLD_3,                            false, true,  true,  nullptr },
-	{ VK_4,       IDM_VIEW_UNFOLD_4,                            false, true,  true,  nullptr },
-	{ VK_5,       IDM_VIEW_UNFOLD_5,                            false, true,  true,  nullptr },
-	{ VK_6,       IDM_VIEW_UNFOLD_6,                            false, true,  true,  nullptr },
-	{ VK_7,       IDM_VIEW_UNFOLD_7,                            false, true,  true,  nullptr },
-	{ VK_8,       IDM_VIEW_UNFOLD_8,                            false, true,  true,  nullptr },
+	{ VK_1,       IDM_VIEW_UNFOLD_1,                            false, true,  true,  TEXT("Uncollapse Level 1") },
+	{ VK_2,       IDM_VIEW_UNFOLD_2,                            false, true,  true,  TEXT("Uncollapse Level 2") },
+	{ VK_3,       IDM_VIEW_UNFOLD_3,                            false, true,  true,  TEXT("Uncollapse Level 3") },
+	{ VK_4,       IDM_VIEW_UNFOLD_4,                            false, true,  true,  TEXT("Uncollapse Level 4") },
+	{ VK_5,       IDM_VIEW_UNFOLD_5,                            false, true,  true,  TEXT("Uncollapse Level 5") },
+	{ VK_6,       IDM_VIEW_UNFOLD_6,                            false, true,  true,  TEXT("Uncollapse Level 6") },
+	{ VK_7,       IDM_VIEW_UNFOLD_7,                            false, true,  true,  TEXT("Uncollapse Level 7") },
+	{ VK_8,       IDM_VIEW_UNFOLD_8,                            false, true,  true,  TEXT("Uncollapse Level 8") },
 	{ VK_NULL,    IDM_VIEW_SUMMARY,                             false, false, false, nullptr },
-	{ VK_NULL,    IDM_VIEW_PROJECT_PANEL_1,                     false, false, false, TEXT("Toggle Project Panel 1")},
-	{ VK_NULL,    IDM_VIEW_PROJECT_PANEL_2,                     false, false, false, TEXT("Toggle Project Panel 2")},
-	{ VK_NULL,    IDM_VIEW_PROJECT_PANEL_3,                     false, false, false, TEXT("Toggle Project Panel 3")},
-	{ VK_NULL,    IDM_VIEW_FILEBROWSER,                         false, false, false, nullptr },
-	{ VK_NULL,    IDM_VIEW_DOC_MAP,                             false, false, false, nullptr },
-	{ VK_NULL,    IDM_VIEW_FUNC_LIST,                           false, false, false, nullptr },
+	{ VK_NULL,    IDM_VIEW_PROJECT_PANEL_1,                     false, false, false, TEXT("Toggle Project Panel 1") },
+	{ VK_NULL,    IDM_VIEW_PROJECT_PANEL_2,                     false, false, false, TEXT("Toggle Project Panel 2") },
+	{ VK_NULL,    IDM_VIEW_PROJECT_PANEL_3,                     false, false, false, TEXT("Toggle Project Panel 3") },
+	{ VK_NULL,    IDM_VIEW_FILEBROWSER,                         false, false, false, TEXT("Toggle Folder as Workspace") },
+	{ VK_NULL,    IDM_VIEW_DOC_MAP,                             false, false, false, TEXT("Toggle Document Map") },
+	{ VK_NULL,    IDM_VIEW_FUNC_LIST,                           false, false, false, TEXT("Toggle Function List") },
+	{ VK_NULL,    IDM_VIEW_SWITCHTO_PROJECT_PANEL_1,            false, false, false, TEXT("Switch to Project Panel 1") },
+	{ VK_NULL,    IDM_VIEW_SWITCHTO_PROJECT_PANEL_2,            false, false, false, TEXT("Switch to Project Panel 2") },
+	{ VK_NULL,    IDM_VIEW_SWITCHTO_PROJECT_PANEL_3,            false, false, false, TEXT("Switch to Project Panel 3") },
+	{ VK_NULL,    IDM_VIEW_SWITCHTO_FILEBROWSER,                false, false, false, TEXT("Switch to Folder as Workspace") },
+	{ VK_NULL,    IDM_VIEW_SWITCHTO_FUNC_LIST,                  false, false, false, TEXT("Switch to Function List") },
 	{ VK_NULL,    IDM_VIEW_SYNSCROLLV,                          false, false, false, nullptr },
 	{ VK_NULL,    IDM_VIEW_SYNSCROLLH,                          false, false, false, nullptr },
 	{ VK_R,       IDM_EDIT_RTL,                                 true,  true,  false, nullptr },
@@ -379,7 +384,7 @@ static const WinMenuKeyDefinition winKeyDefs[] =
 	{ VK_NULL,    IDM_SETTING_IMPORTSTYLETHEMS,                 false, false, false, nullptr },
 	{ VK_NULL,    IDM_SETTING_EDITCONTEXTMENU,                  false, false, false, nullptr },
 
-	{ VK_R,       IDC_EDIT_TOGGLEMACRORECORDING,                true,  false, true,  TEXT("Toggle macro record")},
+	{ VK_R,       IDC_EDIT_TOGGLEMACRORECORDING,                true,  false, true,  TEXT("Toggle macro recording")},
 	{ VK_NULL,    IDM_MACRO_STARTRECORDINGMACRO,                false, false, false, nullptr },
 	{ VK_NULL,    IDM_MACRO_STOPRECORDINGMACRO,                 false, false, false, nullptr },
 	{ VK_P,       IDM_MACRO_PLAYBACKRECORDEDMACRO,              true,  false, true,  nullptr },
@@ -395,8 +400,12 @@ static const WinMenuKeyDefinition winKeyDefs[] =
 	{ VK_NULL,    IDM_FORUM,                                    false, false, false, nullptr },
 	{ VK_NULL,    IDM_ONLINESUPPORT,                            false, false, false, nullptr },
 //	{ VK_NULL,    IDM_PLUGINSHOME,                              false, false, false, nullptr },
-	{ VK_NULL,    IDM_UPDATE_NPP,                               false, false, false, nullptr },
-	{ VK_NULL,    IDM_CONFUPDATERPROXY,                         false, false, false, nullptr },
+
+	// The following two commands are not in menu if (nppGUI._doesExistUpdater == 0).
+	// They cannot be derived from menu then, only for this reason the text is specified here.
+	// In localized environments, the text comes preferably from xml Menu/Main/Commands.
+	{ VK_NULL,    IDM_UPDATE_NPP,                               false, false, false, TEXT("Update Notepad++") },
+	{ VK_NULL,    IDM_CONFUPDATERPROXY,                         false, false, false, TEXT("Set Updater Proxy...") },
 	{ VK_NULL,    IDM_DEBUGINFO,                                false, false, false, nullptr },
 	{ VK_F1,      IDM_ABOUT,                                    false, false, false, nullptr }
 //  { VK_F1,      IDM_HELP,                                     false, false, true,  nullptr }
@@ -427,8 +436,8 @@ static const ScintillaKeyDefinition scintKeyDefs[] =
 	{TEXT(""),                            SCI_REDO,                    true,  false, true,  VK_Z,        0},
 	{TEXT("SCI_NEWLINE"),                 SCI_NEWLINE,                 false, false, false, VK_RETURN,   0},
 	{TEXT(""),                            SCI_NEWLINE,                 false, false, true,  VK_RETURN,   0},
-	{TEXT("SCI_TAB"),                     SCI_TAB,                     false, false, false, VK_TAB,      IDM_EDIT_INS_TAB},
-	{TEXT("SCI_BACKTAB"),                 SCI_BACKTAB,                 false, false, true,  VK_TAB,      IDM_EDIT_RMV_TAB},
+	{TEXT("SCI_TAB"),                     SCI_TAB,                     false, false, false, VK_TAB,      0},
+	{TEXT("SCI_BACKTAB"),                 SCI_BACKTAB,                 false, false, true,  VK_TAB,      0},
 	{TEXT("SCI_FORMFEED"),                SCI_FORMFEED,                false, false, false, 0,           0},
 	{TEXT("SCI_ZOOMIN"),                  SCI_ZOOMIN,                  true,  false, false, VK_ADD,      IDM_VIEW_ZOOMIN},
 	{TEXT("SCI_ZOOMOUT"),                 SCI_ZOOMOUT,                 true,  false, false, VK_SUBTRACT, IDM_VIEW_ZOOMOUT},
@@ -2354,10 +2363,6 @@ void NppParameters::feedFindHistoryParameters(TiXmlNode *node)
 	boolStr = (findHistoryRoot->ToElement())->Attribute(TEXT("fifProjectPanel3"));
 	if (boolStr)
 		_findHistory._isFifProjectPanel_3 = (lstrcmp(TEXT("yes"), boolStr) == 0);
-
-	boolStr = (findHistoryRoot->ToElement())->Attribute(TEXT("dlgAlwaysVisible"));
-	if (boolStr)
-		_findHistory._isDlgAlwaysVisible = (lstrcmp(TEXT("yes"), boolStr) == 0);
 
 	boolStr = (findHistoryRoot->ToElement())->Attribute(TEXT("fifFilterFollowsDoc"));
 	if (boolStr)
@@ -4579,6 +4584,15 @@ void NppParameters::feedGUIParameters(TiXmlNode *node)
 			}
 		}
 
+		else if (!lstrcmp(nm, TEXT("FinderConfig")))
+		{
+			const TCHAR* val = element->Attribute(TEXT("wrappedLines"));
+			if (val)
+			{
+				_nppGUI._finderLinesAreCurrentlyWrapped = (!lstrcmp(val, TEXT("yes")));
+			}
+		}
+
 		else if (!lstrcmp(nm, TEXT("NewDocDefaultSettings")))
 		{
 			int i;
@@ -5149,6 +5163,14 @@ void NppParameters::feedGUIParameters(TiXmlNode *node)
 			const TCHAR* optStopFillingFindField = element->Attribute(TEXT("stopFillingFindField"));
 			if (optStopFillingFindField)
 				_nppGUI._stopFillingFindField = (lstrcmp(optStopFillingFindField, TEXT("yes")) == 0);
+
+			const TCHAR* optFindDlgAlwaysVisible = element->Attribute(TEXT("findDlgAlwaysVisible"));
+			if (optFindDlgAlwaysVisible)
+				_nppGUI._findDlgAlwaysVisible = (lstrcmp(optFindDlgAlwaysVisible, TEXT("yes")) == 0);
+
+			const TCHAR* optConfirmReplaceOpenDocs = element->Attribute(TEXT("confirmReplaceInAllOpenDocs"));
+			if (optConfirmReplaceOpenDocs)
+				_nppGUI._confirmReplaceInAllOpenDocs = (lstrcmp(optConfirmReplaceOpenDocs, TEXT("yes")) == 0);
 		}
 		else if (!lstrcmp(nm, TEXT("MISC")))
 		{
@@ -5660,6 +5682,14 @@ void NppParameters::createXmlTreeFromGUIParams()
 		GUIConfigElement->SetAttribute(TEXT("bottom"), _nppGUI._findWindowPos.bottom);
 	}
 
+	// <GUIConfig name="FinderConfig" wrappedLines="no" />
+	{
+		TiXmlElement* GUIConfigElement = (newGUIRoot->InsertEndChild(TiXmlElement(TEXT("GUIConfig"))))->ToElement();
+		GUIConfigElement->SetAttribute(TEXT("name"), TEXT("FinderConfig"));
+		const TCHAR* pStr = _nppGUI._finderLinesAreCurrentlyWrapped ? TEXT("yes") : TEXT("no");
+		GUIConfigElement->SetAttribute(TEXT("wrappedLines"), pStr);
+	}
+
 	// <GUIConfig name="noUpdate" intervalDays="15" nextUpdateDate="20161022">no</GUIConfig>
 	{
 		TiXmlElement *element = insertGUIConfigBoolNode(newGUIRoot, TEXT("noUpdate"), !_nppGUI._autoUpdateOpt._doAutoUpdate);
@@ -5955,13 +5985,15 @@ void NppParameters::createXmlTreeFromGUIParams()
 		GUIConfigElement->SetAttribute(TEXT("docPeekOnMap"), _nppGUI._isDocPeekOnMap ? TEXT("yes") : TEXT("no"));
 	}
 
-	// <GUIConfig name="Searching" "monospacedFontFindDlg"="no" stopFillingFindField="no" />
+	// <GUIConfig name="Searching" "monospacedFontFindDlg"="no" stopFillingFindField="no" findDlgAlwaysVisible="no" confirmReplaceOpenDocs="yes" confirmMacroReplaceOpenDocs="yes" confirmReplaceInFiles="yes" confirmMacroReplaceInFiles="yes" />
 	{
 		TiXmlElement* GUIConfigElement = (newGUIRoot->InsertEndChild(TiXmlElement(TEXT("GUIConfig"))))->ToElement();
 		GUIConfigElement->SetAttribute(TEXT("name"), TEXT("Searching"));
 
 		GUIConfigElement->SetAttribute(TEXT("monospacedFontFindDlg"), _nppGUI._monospacedFontFindDlg ? TEXT("yes") : TEXT("no"));
 		GUIConfigElement->SetAttribute(TEXT("stopFillingFindField"), _nppGUI._stopFillingFindField ? TEXT("yes") : TEXT("no"));
+		GUIConfigElement->SetAttribute(TEXT("findDlgAlwaysVisible"), _nppGUI._findDlgAlwaysVisible ? TEXT("yes") : TEXT("no"));
+		GUIConfigElement->SetAttribute(TEXT("confirmReplaceInAllOpenDocs"), _nppGUI._confirmReplaceInAllOpenDocs ? TEXT("yes") : TEXT("no"));
 	}
 
 	// <GUIConfig name="searchEngine" searchEngineChoice="2" searchEngineCustom="" />
@@ -6030,7 +6062,6 @@ bool NppParameters::writeFindHistory()
 	(findHistoryRoot->ToElement())->SetAttribute(TEXT("fifProjectPanel1"),	    	_findHistory._isFifProjectPanel_1?TEXT("yes"):TEXT("no"));
 	(findHistoryRoot->ToElement())->SetAttribute(TEXT("fifProjectPanel2"),	      	_findHistory._isFifProjectPanel_2?TEXT("yes"):TEXT("no"));
 	(findHistoryRoot->ToElement())->SetAttribute(TEXT("fifProjectPanel3"),	       	_findHistory._isFifProjectPanel_3?TEXT("yes"):TEXT("no"));
-	(findHistoryRoot->ToElement())->SetAttribute(TEXT("dlgAlwaysVisible"),		_findHistory._isDlgAlwaysVisible?TEXT("yes"):TEXT("no"));
 	(findHistoryRoot->ToElement())->SetAttribute(TEXT("fifFilterFollowsDoc"),	_findHistory._isFilterFollowDoc?TEXT("yes"):TEXT("no"));
 	(findHistoryRoot->ToElement())->SetAttribute(TEXT("fifFolderFollowsDoc"),	_findHistory._isFolderFollowDoc?TEXT("yes"):TEXT("no"));
 

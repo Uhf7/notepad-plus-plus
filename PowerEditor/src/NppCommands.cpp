@@ -719,7 +719,19 @@ void Notepad_plus::command(int id)
 		}
 		break;
 
+		case IDM_VIEW_SWITCHTO_PROJECT_PANEL_1:
+		case IDM_VIEW_SWITCHTO_PROJECT_PANEL_2:
+		case IDM_VIEW_SWITCHTO_PROJECT_PANEL_3:
+		{
+			ProjectPanel** pp [] = {&_pProjectPanel_1, &_pProjectPanel_2, &_pProjectPanel_3};
+			int idx = id - IDM_VIEW_SWITCHTO_PROJECT_PANEL_1;
+			launchProjectPanel(id - IDM_VIEW_SWITCHTO_PROJECT_PANEL_1 + IDM_VIEW_PROJECT_PANEL_1, pp [idx], idx);
+		}
+		break;
+
+
 		case IDM_VIEW_FILEBROWSER:
+		case IDM_VIEW_SWITCHTO_FILEBROWSER:
 		{
 			if (_pFileBrowser == nullptr) // first launch, check in params to open folders
 			{
@@ -734,10 +746,8 @@ void Notepad_plus::command(int id)
 			}
 			else
 			{
-				if (not _pFileBrowser->isClosed())
+				if (!_pFileBrowser->isClosed() && (id != IDM_VIEW_SWITCHTO_FILEBROWSER))
 				{
-					if (::IsChild(_pFileBrowser->getHSelf(), ::GetFocus()))
-						::SetFocus(_pEditView->getHSelf());
 					_pFileBrowser->display(false);
 					_pFileBrowser->setClosed(true);
 					checkMenuItem(IDM_VIEW_FILEBROWSER, false);
@@ -778,12 +788,26 @@ void Notepad_plus::command(int id)
 		}
 		break;
 
+		case IDM_VIEW_SWITCHTO_FUNC_LIST:
+		{
+			if (_pFuncList && _pFuncList->isVisible())
+			{
+				_pFuncList->getFocus();
+			}
+			else
+			{
+				checkMenuItem(IDM_VIEW_FUNC_LIST, true);
+				_toolBar.setCheck(IDM_VIEW_FUNC_LIST, true);
+				launchFunctionList();
+				_pFuncList->setClosed(false);
+			}
+		}
+		break;
+		
 		case IDM_VIEW_FUNC_LIST:
 		{
-			if (_pFuncList && (not _pFuncList->isClosed()))
+			if (_pFuncList && (!_pFuncList->isClosed()))
 			{
-				if (::IsChild(_pFuncList->getHSelf(), ::GetFocus()))
-					::SetFocus(_pEditView->getHSelf());
 				_pFuncList->display(false);
 				_pFuncList->setClosed(true);
 				checkMenuItem(IDM_VIEW_FUNC_LIST, false);
@@ -1423,12 +1447,30 @@ void Notepad_plus::command(int id)
 			break;
 
 		case IDM_EDIT_INS_TAB:
-			_pEditView->execute(SCI_TAB);
-			break;
-
 		case IDM_EDIT_RMV_TAB:
-			_pEditView->execute(SCI_BACKTAB);
-			break;
+		{
+			bool forwards = id == IDM_EDIT_INS_TAB;
+			int selStartPos = static_cast<int>(_pEditView->execute(SCI_GETSELECTIONSTART));
+			int lineNumber = static_cast<int>(_pEditView->execute(SCI_LINEFROMPOSITION, selStartPos));
+			int numSelections = static_cast<int>(_pEditView->execute(SCI_GETSELECTIONS));
+			int selEndPos = static_cast<int>(_pEditView->execute(SCI_GETSELECTIONEND));
+			int selEndLineNumber = static_cast<int>(_pEditView->execute(SCI_LINEFROMPOSITION, selEndPos));
+			if ((numSelections > 1) || (lineNumber != selEndLineNumber))
+			{
+				// multiple-selection or multi-line selection; use Scintilla SCI_TAB / SCI_BACKTAB behavior
+				_pEditView->execute(forwards ? SCI_TAB : SCI_BACKTAB);
+			}
+			else
+			{
+				// zero-length selection (simple single caret) or selected text is all on single line
+				// depart from Scintilla behavior and do it our way
+				int currentIndent = static_cast<int>(_pEditView->execute(SCI_GETLINEINDENTATION, lineNumber));
+				int indentDelta = static_cast<int>(_pEditView->execute(SCI_GETTABWIDTH));
+				if (!forwards) indentDelta = -indentDelta;
+				_pEditView->setLineIndent(lineNumber, currentIndent + indentDelta);
+			}
+		}
+		break;
 
 		case IDM_EDIT_DUP_LINE:
 			_pEditView->execute(SCI_LINEDUPLICATE);
