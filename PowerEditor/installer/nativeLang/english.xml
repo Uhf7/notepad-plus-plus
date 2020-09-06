@@ -391,7 +391,7 @@
                 <Item id="1624" name="Search mode"/>
                 <Item id="1625" name="&amp;Normal"/>
                 <Item id="1626" name="E&amp;xtended (\n, \r, \t, \0, \x...)"/>
-                <Item id="1660" name="&amp;Replace in Files"/>
+                <Item id="1660" name="Replace in Files"/>
                 <Item id="1661" name="Follow current doc."/>
                 <Item id="1641" name="Find All in Current Document"/>
                 <Item id="1686" name="Transparenc&amp;y"/>
@@ -1018,6 +1018,7 @@ You can define several column markers by using white space to separate the diffe
                     <Item id="6331" name="Show only filename in title bar"/>
                     <Item id="6334" name="Autodetect character encoding"/>
                     <Item id="6349" name="Use DirectWrite (May improve rendering special characters, need to restart Notepad++)"/>
+                    <Item id="6350" name="Enable fullbox mode"/>
                     <Item id="6337" name="Workspace file ext.:"/>
                     <Item id="6114" name="Enable"/>
                     <Item id="6117" name="Enable MRU behaviour"/>
