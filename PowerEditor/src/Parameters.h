@@ -1549,6 +1549,8 @@ public:
 	};
 
 	const std::vector<generic_string> getFileBrowserRoots() const { return _fileBrowserRoot; };
+	generic_string getFileBrowserSelectedItemPath() const { return _fileBrowserSelectedItemPath; };
+
 	void setWorkSpaceFilePath(int i, const TCHAR *wsFile);
 
 	void setWorkingDir(const TCHAR * newPath);
@@ -1797,6 +1799,7 @@ private:
 	generic_string _workSpaceFilePathes[3];
 
 	std::vector<generic_string> _fileBrowserRoot;
+	generic_string _fileBrowserSelectedItemPath;
 
 	Accelerator *_pAccelerator;
 	ScintillaAccelerator * _pScintAccelerator;

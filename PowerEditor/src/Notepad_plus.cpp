@@ -3361,7 +3361,8 @@ void Notepad_plus::dropFiles(HDROP hdrop)
 		else if (not isOldMode && (folderPaths.size() != 0 && filePaths.size() == 0)) // new mode && only folders
 		{
 			// process new mode
-			launchFileBrowser(folderPaths);
+			generic_string emptyStr;
+			launchFileBrowser(folderPaths, emptyStr);
 		}
 
 		::DragFinish(hdrop);
@@ -3891,11 +3892,13 @@ void Notepad_plus::performPostReload(int whichOne)
 		return;
 	if (whichOne == MAIN_VIEW)
 	{
-		_mainEditView.execute(SCI_GOTOLINE, _mainEditView.execute(SCI_GETLINECOUNT) -1);
+		_mainEditView.setPositionRestoreNeeded(false);
+		_mainEditView.execute(SCI_DOCUMENTEND);
 	}
 	else
 	{
-		_subEditView.execute(SCI_GOTOLINE, _subEditView.execute(SCI_GETLINECOUNT) -1);
+		_subEditView.setPositionRestoreNeeded(false);
+		_subEditView.execute(SCI_DOCUMENTEND);
 	}
 }
 
@@ -5263,12 +5266,14 @@ void Notepad_plus::notifyBufferChanged(Buffer * buffer, int mask)
 				// not only test main view
 				if (buffer == _mainEditView.getCurrentBuffer())
 				{
-					_mainEditView.execute(SCI_GOTOLINE, _mainEditView.execute(SCI_GETLINECOUNT) - 1);
+					_mainEditView.setPositionRestoreNeeded(false);
+					_mainEditView.execute(SCI_DOCUMENTEND);
 				}
 				// but also test sub-view, because the buffer could be clonned
 				if (buffer == _subEditView.getCurrentBuffer())
 				{
-					_subEditView.execute(SCI_GOTOLINE, _subEditView.execute(SCI_GETLINECOUNT) - 1);
+					_subEditView.setPositionRestoreNeeded(false);
+					_subEditView.execute(SCI_DOCUMENTEND);
 				}
 
 				break;
@@ -6012,7 +6017,7 @@ void Notepad_plus::launchAnsiCharPanel()
 	_pAnsiCharPanel->display();
 }
 
-void Notepad_plus::launchFileBrowser(const vector<generic_string> & folders, bool fromScratch)
+void Notepad_plus::launchFileBrowser(const vector<generic_string> & folders, const generic_string& selectedItemPath, bool fromScratch)
 {
 	if (!_pFileBrowser)
 	{
@@ -6064,6 +6069,7 @@ void Notepad_plus::launchFileBrowser(const vector<generic_string> & folders, boo
 	}
 
 	_pFileBrowser->display();
+	_pFileBrowser->selectItemFromPath(selectedItemPath);
 
 	checkMenuItem(IDM_VIEW_FILEBROWSER, true);
 	_toolBar.setCheck(IDM_VIEW_FILEBROWSER, true);

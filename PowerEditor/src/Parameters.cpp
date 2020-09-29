@@ -213,13 +213,13 @@ static const WinMenuKeyDefinition winKeyDefs[] =
 	{ VK_3,       IDM_SEARCH_GOPREVMARKER3,                     true,  false, true,  TEXT("Previous mark using 3rd style") },
 	{ VK_4,       IDM_SEARCH_GOPREVMARKER4,                     true,  false, true,  TEXT("Previous mark using 4th style") },
 	{ VK_5,       IDM_SEARCH_GOPREVMARKER5,                     true,  false, true,  TEXT("Previous mark using 5th style") },
-	{ VK_0,       IDM_SEARCH_GOPREVMARKER_DEF,                  true,  false, true,  TEXT("Previous mark created with Mark...") },
+	{ VK_0,       IDM_SEARCH_GOPREVMARKER_DEF,                  true,  false, true,  TEXT("Previous mark created with Mark") },
 	{ VK_1,       IDM_SEARCH_GONEXTMARKER1,                     true,  false, false, TEXT("Next mark using 1st style") },
 	{ VK_2,       IDM_SEARCH_GONEXTMARKER2,                     true,  false, false, TEXT("Next mark using 2nd style") },
 	{ VK_3,       IDM_SEARCH_GONEXTMARKER3,                     true,  false, false, TEXT("Next mark using 3rd style") },
 	{ VK_4,       IDM_SEARCH_GONEXTMARKER4,                     true,  false, false, TEXT("Next mark using 4th style") },
 	{ VK_5,       IDM_SEARCH_GONEXTMARKER5,                     true,  false, false, TEXT("Next mark using 5th style") },
-	{ VK_0,       IDM_SEARCH_GONEXTMARKER_DEF,                  true,  false, false, TEXT("Next mark created with Mark...") },
+	{ VK_0,       IDM_SEARCH_GONEXTMARKER_DEF,                  true,  false, false, TEXT("Next mark created with Mark") },
 				 
 	{ VK_F2,      IDM_SEARCH_TOGGLE_BOOKMARK,                   true,  false, false, nullptr },
 	{ VK_F2,      IDM_SEARCH_NEXT_BOOKMARK,                     false, false, false, nullptr },
@@ -2208,10 +2208,16 @@ void NppParameters::feedFileListParameters(TiXmlNode *node)
 	}
 }
 
-void NppParameters::feedProjectPanelsParameters(TiXmlNode *node)
+void NppParameters::feedFileBrowserParameters(TiXmlNode *node)
 {
 	TiXmlNode *fileBrowserRoot = node->FirstChildElement(TEXT("FileBrowser"));
 	if (!fileBrowserRoot) return;
+
+	const TCHAR *selectedItemPath = (fileBrowserRoot->ToElement())->Attribute(TEXT("latestSelectedItem"));
+	if (selectedItemPath)
+	{
+		_fileBrowserSelectedItemPath = selectedItemPath;
+	}
 
 	for (TiXmlNode *childNode = fileBrowserRoot->FirstChildElement(TEXT("root"));
 		childNode;
@@ -2225,7 +2231,7 @@ void NppParameters::feedProjectPanelsParameters(TiXmlNode *node)
 	}
 }
 
-void NppParameters::feedFileBrowserParameters(TiXmlNode *node)
+void NppParameters::feedProjectPanelsParameters(TiXmlNode *node)
 {
 	TiXmlNode *projPanelRoot = node->FirstChildElement(TEXT("ProjectPanels"));
 	if (!projPanelRoot) return;
@@ -3971,6 +3977,18 @@ generic_string NppParameters::getLocPathFromStr(const generic_string & localizat
 		return TEXT("zulu.xml");
 	if (localizationCode == TEXT("ne") || localizationCode == TEXT("nep"))
 		return TEXT("nepali.xml");
+	if (localizationCode == TEXT("oc-aranes"))
+		return TEXT("aranese.xml");
+	if (localizationCode == TEXT("exy"))
+		return TEXT("extremaduran.xml");
+	if (localizationCode == TEXT("keb"))
+		return TEXT("kabyle.xml");
+	if (localizationCode == TEXT("lij"))
+		return TEXT("ligurian.xml");
+	if (localizationCode == TEXT("ga"))
+		return TEXT("irish.xml");
+	if (localizationCode == TEXT("sgs"))
+		return TEXT("samogitian.xml");
 
 	return generic_string();
 }

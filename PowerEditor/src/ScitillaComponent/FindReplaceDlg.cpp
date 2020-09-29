@@ -223,6 +223,9 @@ void Searching::displaySectionCentered(int posStart, int posEnd, ScintillaEditVi
 	pEditView->execute(SCI_GOTOPOS, isDownwards ? posEnd : posStart);
 	pEditView->execute(SCI_SETYCARETPOLICY, CARET_EVEN);
 
+	// Adjust so that we see the entire match; primarily horizontally
+	pEditView->execute(SCI_SCROLLRANGE, posStart, posEnd);
+
 	// Move cursor to end of result and select result
 	pEditView->execute(SCI_GOTOPOS, posEnd);
 	pEditView->execute(SCI_SETANCHOR, posStart);
@@ -1481,7 +1484,8 @@ INT_PTR CALLBACK FindReplaceDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM
 
 				case IDNORMAL:
 				case IDEXTENDED:
-				case IDREGEXP : {
+				case IDREGEXP : 
+				{
 					if (isCheckedOrNot(IDREGEXP))
 					{
 						_options._searchType = FindRegex;
@@ -1527,7 +1531,8 @@ INT_PTR CALLBACK FindReplaceDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM
 					enableFindDlgItem(IDC_BACKWARDDIRECTION, doEnable);
 					enableFindDlgItem(IDC_FINDPREV, doEnable);
 
-					return TRUE; }
+					return TRUE; 
+				}
 
 				case IDWRAP :
 					findHistory._isWrap = _options._isWrapAround = isCheckedOrNot(IDWRAP);
