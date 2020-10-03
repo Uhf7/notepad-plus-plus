@@ -804,7 +804,7 @@ void FindReplaceDlg::resizeDialogElements(LONG newWidth)
 
 		IDD_FINDINFILES_BROWSE_BUTTON, IDCMARKALL, IDC_CLEAR_ALL, IDCCOUNTALL, IDC_FINDALL_OPENEDFILES, IDC_FINDALL_CURRENTFILE,
 		IDREPLACE, IDREPLACEALL,IDC_REPLACE_OPENEDFILES, IDD_FINDINFILES_FIND_BUTTON, IDD_FINDINFILES_REPLACEINFILES, IDOK, IDCANCEL,
-		IDC_FINDPREV, IDC_FINDNEXT, IDC_2_BUTTONS_MODE
+		IDC_FINDPREV, IDC_FINDNEXT, IDC_2_BUTTONS_MODE, IDC_COPY_MARKED_TEXT
 	};
 
 	const UINT flags = SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_NOACTIVATE | SWP_NOCOPYBITS;
@@ -913,8 +913,8 @@ INT_PTR CALLBACK FindReplaceDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM
 			// Close button
 			RECT arc;
 			::GetWindowRect(::GetDlgItem(_hSelf, IDCANCEL), &arc);
-			_findInFilesClosePos.bottom = _replaceClosePos.bottom = _findClosePos.bottom = arc.bottom - arc.top;
-			_findInFilesClosePos.right = _replaceClosePos.right = _findClosePos.right = arc.right - arc.left;
+			_markClosePos.bottom = _findInFilesClosePos.bottom = _replaceClosePos.bottom = _findClosePos.bottom = arc.bottom - arc.top;
+			_markClosePos.right = _findInFilesClosePos.right = _replaceClosePos.right = _findClosePos.right = arc.right - arc.left;
 
 			POINT p = getTopPoint(::GetDlgItem(_hSelf, IDCANCEL), !_isRTL);
 			_replaceClosePos.left = p.x;
@@ -923,6 +923,10 @@ INT_PTR CALLBACK FindReplaceDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM
 			 p = getTopPoint(::GetDlgItem(_hSelf, IDREPLACEALL), !_isRTL);
 			 _findInFilesClosePos.left = p.x;
 			 _findInFilesClosePos.top = p.y;
+
+			 p = getTopPoint(::GetDlgItem(_hSelf, IDC_REPLACE_OPENEDFILES), !_isRTL);
+			 _markClosePos.left = p.x;
+			 _markClosePos.top = p.y;
 
 			 p = getTopPoint(::GetDlgItem(_hSelf, IDCANCEL), !_isRTL);
 			 _findClosePos.left = p.x;
@@ -1469,6 +1473,13 @@ INT_PTR CALLBACK FindReplaceDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM
 					}
 				}
 				return TRUE;
+
+				case IDC_COPY_MARKED_TEXT:
+				{
+					markedTextToClipboard(SCE_UNIVERSAL_FOUND_STYLE);
+				}
+				return TRUE;
+
 //Option actions
 				case IDREDOTMATCHNL:
 					findHistory._dotMatchesNewline = _options._dotMatchesNewline = isCheckedOrNot(IDREDOTMATCHNL);
@@ -2760,6 +2771,7 @@ void FindReplaceDlg::enableMarkAllControls(bool isEnable)
 	showFindDlgItem(IDC_PURGE_CHECK, isEnable);
 	showFindDlgItem(IDC_CLEAR_ALL, isEnable);
 	showFindDlgItem(IDC_IN_SELECTION_CHECK, isEnable);
+	showFindDlgItem(IDC_COPY_MARKED_TEXT, isEnable);
 }
 
 void FindReplaceDlg::enableFindInFilesControls(bool isEnable)
@@ -2792,7 +2804,8 @@ void FindReplaceDlg::enableFindInFilesControls(bool isEnable)
 	showFindDlgItem(IDC_IN_SELECTION_CHECK, !isEnable);
 	showFindDlgItem(IDC_CLEAR_ALL, !isEnable);
 	showFindDlgItem(IDCMARKALL, !isEnable);
-	
+	showFindDlgItem(IDC_COPY_MARKED_TEXT, !isEnable);
+
 	showFindDlgItem(IDREPLACE, !isEnable);
 	showFindDlgItem(IDC_REPLACEINSELECTION, !isEnable);
 	showFindDlgItem(IDREPLACEALL, !isEnable);
@@ -3311,12 +3324,14 @@ void FindReplaceDlg::doDialog(DIALOG_TYPE whichType, bool isRTL, bool toShow)
 
 LRESULT FAR PASCAL FindReplaceDlg::finderProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	if (message == WM_KEYDOWN && (wParam == VK_DELETE || wParam == VK_RETURN))
+	if (message == WM_KEYDOWN && (wParam == VK_DELETE || wParam == VK_RETURN || wParam == VK_ESCAPE))
 	{
 		ScintillaEditView *pScint = (ScintillaEditView *)(::GetWindowLongPtr(hwnd, GWLP_USERDATA));
 		Finder *pFinder = (Finder *)(::GetWindowLongPtr(pScint->getHParent(), GWLP_USERDATA));
 		if (wParam == VK_RETURN)
 			pFinder->gotoFoundLine();
+		else if (wParam == VK_ESCAPE)
+			::SendMessage(::GetParent(pFinder->getHParent()), NPPM_DMMHIDE, 0, reinterpret_cast<LPARAM>(pFinder->getHSelf()));
 		else // VK_DELETE
 			pFinder->deleteResult();
 		return 0;
@@ -3376,6 +3391,7 @@ void FindReplaceDlg::enableMarkFunc()
 	::MoveWindow(::GetDlgItem(_hSelf, IDCANCEL), _findInFilesClosePos.left + _deltaWidth, _findInFilesClosePos.top, _findInFilesClosePos.right, _findInFilesClosePos.bottom, TRUE);
 	::MoveWindow(::GetDlgItem(_hSelf, IDC_IN_SELECTION_CHECK), _replaceInSelCheckPos.left + _deltaWidth, _replaceInSelCheckPos.top, _replaceInSelCheckPos.right, _replaceInSelCheckPos.bottom, TRUE);
 	::MoveWindow(::GetDlgItem(_hSelf, IDC_REPLACEINSELECTION), _replaceInSelFramePos.left + _deltaWidth, _replaceInSelFramePos.top, _replaceInSelFramePos.right, _replaceInSelFramePos.bottom, TRUE);
+	::MoveWindow(::GetDlgItem(_hSelf, IDCANCEL), _markClosePos.left + _deltaWidth, _markClosePos.top, _markClosePos.right, _markClosePos.bottom, TRUE);
 
 	TCHAR label[MAX_PATH];
 	_tab.getCurrentTitle(label, MAX_PATH);
@@ -3509,6 +3525,48 @@ bool FindReplaceDlg::replaceInOpenDocsConfirmCheck(void)
 	}
 
 	return confirmed;
+}
+
+void FindReplaceDlg::markedTextToClipboard(int indiStyle)
+{
+	auto pos = (*_ppEditView)->execute(SCI_INDICATOREND, indiStyle, 0);
+	if (pos > 0)
+	{
+		std::vector<generic_string> markedTextStr;
+		bool atEndOfIndic = (*_ppEditView)->execute(SCI_INDICATORVALUEAT, indiStyle, 0) != 0;
+		auto prevPos = pos;
+		if (atEndOfIndic) prevPos = 0;
+
+		const generic_string cr = TEXT("\r");
+		const generic_string lf = TEXT("\n");
+		bool dataHasLineEndingChar = false;
+
+		do
+		{
+			if (atEndOfIndic)
+			{
+				generic_string s = (*_ppEditView)->getGenericTextAsString(prevPos, pos);
+				if (!dataHasLineEndingChar)
+				{
+					if (s.find(cr) != std::string::npos || s.find(lf) != std::string::npos)
+					{
+						dataHasLineEndingChar = true;
+					}
+				}
+				markedTextStr.push_back(s);
+			}
+			atEndOfIndic = !atEndOfIndic;
+			prevPos = pos;
+			pos = (*_ppEditView)->execute(SCI_INDICATOREND, indiStyle, pos);
+		} while (pos != prevPos);
+
+		if (markedTextStr.size() > 0)
+		{
+			const generic_string delim = dataHasLineEndingChar ? TEXT("\r\n----\r\n") : TEXT("\r\n");
+			generic_string joined = stringJoin(markedTextStr, delim) + delim;
+			str2Clipboard(joined, NULL);
+		}
+	}
 }
 
 generic_string Finder::getHitsString(int count) const

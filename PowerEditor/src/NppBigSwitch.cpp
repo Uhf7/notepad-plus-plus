@@ -666,6 +666,13 @@ LRESULT Notepad_plus::process(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 			return TRUE;
 		}
 
+		case NPPM_INTERNAL_CHANGETABBAEICONS:
+		{
+			_mainDocTab.changeIcons(static_cast<unsigned char>(lParam));
+			_subDocTab.changeIcons(static_cast<unsigned char>(lParam));
+			return TRUE;
+		}
+
 		case NPPM_INTERNAL_RELOADNATIVELANG:
 		{
 			reloadLang();
@@ -1663,11 +1670,14 @@ LRESULT Notepad_plus::process(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 
 		case WM_ACTIVATE:
 		{
-			_pEditView->getFocus();
-			auto x = _pEditView->execute(SCI_GETXOFFSET);
-			_pEditView->execute(SCI_SETXOFFSET, x);
-			x = _pNonEditView->execute(SCI_GETXOFFSET);
-			_pNonEditView->execute(SCI_SETXOFFSET, x);
+			if (wParam != WA_INACTIVE)
+			{
+				_pEditView->getFocus();
+				auto x = _pEditView->execute(SCI_GETXOFFSET);
+				_pEditView->execute(SCI_SETXOFFSET, x);
+				x = _pNonEditView->execute(SCI_GETXOFFSET);
+				_pNonEditView->execute(SCI_SETXOFFSET, x);
+			}
 			return TRUE;
 		}
 

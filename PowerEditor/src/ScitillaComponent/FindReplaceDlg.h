@@ -347,6 +347,7 @@ public :
 	generic_string getScopeInfoForStatusBar(FindOption const *pFindOpt) const;
 	Finder * createFinder();
 	bool removeFinder(Finder *finder2remove);
+	void markedTextToClipboard(int indiStyle);
 
 protected :
 	void resizeDialogElements(LONG newWidth);
@@ -367,7 +368,7 @@ private :
 	LONG _initialClientWidth;
 
 	DIALOG_TYPE _currentStatus;
-	RECT _findClosePos, _replaceClosePos, _findInFilesClosePos;
+	RECT _findClosePos, _replaceClosePos, _findInFilesClosePos, _markClosePos;
 	RECT _findCountPos, _replaceCountPos;
 	RECT _countInSelFramePos, _replaceInSelFramePos;
 	RECT _countInSelCheckPos, _replaceInSelCheckPos;

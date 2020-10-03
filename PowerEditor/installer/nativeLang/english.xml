@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <NotepadPlus>
-    <Native-Langue name="English" filename="english.xml" version="7.9">
+    <Native-Langue name="English" filename="english.xml" version="7.9.1">
         <Menu>
             <Main>
                 <!-- Main Menu Entries -->
@@ -75,6 +75,7 @@
                     <Item id="41002" name="&amp;Open"/>
                     <Item id="41019" name="Explorer"/>
                     <Item id="41020" name="cmd"/>
+                    <Item id="41025" name="Folder as Workspace"/>
                     <Item id="41003" name="&amp;Close"/>
                     <Item id="41004" name="Clos&amp;e All"/>
                     <Item id="41005" name="Close All BUT Current Document"/>
@@ -114,6 +115,8 @@
                     <Item id="42015" name="Move Down Current Line"/>
                     <Item id="42059" name="Sort Lines Lexicographically Ascending"/>
                     <Item id="42060" name="Sort Lines Lexicographically Descending"/>
+                    <Item id="42080" name="Sort Lines Lex. Ascending Ignoring Case"/>
+                    <Item id="42081" name="Sort Lines Lex. Descending Ignoring Case"/>
                     <Item id="42061" name="Sort Lines As Integers Ascending"/>
                     <Item id="42062" name="Sort Lines As Integers Descending"/>
                     <Item id="42063" name="Sort Lines As Decimals (Comma) Ascending"/>
@@ -163,6 +166,7 @@
                     <Item id="42029" name="Current File Path to Clipboard"/>
                     <Item id="42030" name="Current Filename to Clipboard"/>
                     <Item id="42031" name="Current Dir. Path to Clipboard"/>
+                    <Item id="42079" name="Marked Text to Clipboard"/>
                     <Item id="42032" name="&amp;Run a Macro Multiple Times..."/>
                     <Item id="42033" name="Clear Read-Only Flag"/>
                     <Item id="42035" name="Single Line Comment"/>
@@ -355,6 +359,7 @@
                     <Item CMID="20" name="Open Containing Folder in cmd"/>
                     <Item CMID="21" name="Open in Default Viewer"/>
                     <Item CMID="22" name="Close All Unchanged"/>
+                    <Item CMID="23" name="Open Containing Folder as Workspace"/>
             </TabBar>
         </Menu>
 
@@ -394,8 +399,9 @@
                 <Item id="1641" name="Find All in Current Document"/>
                 <Item id="1686" name="Transparenc&amp;y"/>
                 <Item id="1703" name="&amp;. matches newline"/>
-				<Item id="1721" name="▲"/>
+                <Item id="1721" name="▲"/>
                 <Item id="1723" name="▼ Find Next"/>
+                <Item id="1725" name="Copy Marked Text to Clipboard"/>
             </Find>
 
             <FindCharsInRange title="Find Characters in Range...">
@@ -785,6 +791,8 @@
                     <Item id="6125" name="Document List Panel"/>
                     <Item id="6126" name="Show"/>
                     <Item id="6127" name="Disable extension column"/>
+
+                    <Item id="6128" name="Alternate icons"/>
                 </Global>
                 <Scintillas title="Editing">
                     <Item id="6216" name="Caret Settings"/>
