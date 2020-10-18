@@ -1048,15 +1048,6 @@ void Notepad_plus::command(int id)
 		}
 		break;
 
-		case IDM_EDIT_MARKEDTOCLIP:
-		{
-			if (_findReplaceDlg.isCreated())
-			{
-				_findReplaceDlg.markedTextToClipboard(SCE_UNIVERSAL_FOUND_STYLE);
-			}
-		}
-		break;
-
 		case IDM_SEARCH_FIND :
 		case IDM_SEARCH_REPLACE :
 		case IDM_SEARCH_MARK :
@@ -1338,7 +1329,43 @@ void Notepad_plus::command(int id)
 		}
 		break;
 
-        case IDM_SEARCH_GOTOLINE :
+		case IDM_SEARCH_STYLE1TOCLIP:
+		{
+			_pEditView->markedTextToClipboard(SCE_UNIVERSAL_FOUND_STYLE_EXT1);
+		}
+		break;
+		case IDM_SEARCH_STYLE2TOCLIP:
+		{
+			_pEditView->markedTextToClipboard(SCE_UNIVERSAL_FOUND_STYLE_EXT2);
+		}
+		break;
+		case IDM_SEARCH_STYLE3TOCLIP:
+		{
+			_pEditView->markedTextToClipboard(SCE_UNIVERSAL_FOUND_STYLE_EXT3);
+		}
+		break;
+		case IDM_SEARCH_STYLE4TOCLIP:
+		{
+			_pEditView->markedTextToClipboard(SCE_UNIVERSAL_FOUND_STYLE_EXT4);
+		}
+		break;
+		case IDM_SEARCH_STYLE5TOCLIP:
+		{
+			_pEditView->markedTextToClipboard(SCE_UNIVERSAL_FOUND_STYLE_EXT5);
+		}
+		break;
+		case IDM_SEARCH_ALLSTYLESTOCLIP:
+		{
+			_pEditView->markedTextToClipboard(-1, true);
+		}
+		break;
+		case IDM_SEARCH_MARKEDTOCLIP:
+		{
+			_pEditView->markedTextToClipboard(SCE_UNIVERSAL_FOUND_STYLE);
+		}
+		break;
+
+		case IDM_SEARCH_GOTOLINE:
 		{
 			bool isFirstTime = !_goToLineDlg.isCreated();
 			_goToLineDlg.doDialog(_nativeLangSpeaker.isRTL());
@@ -1521,9 +1548,9 @@ void Notepad_plus::command(int id)
 
 		case IDM_EDIT_SPLIT_LINES:
 		{
-			pair<int, int> lineRange = _pEditView->getSelectionLinesRange();
-			if (lineRange.first != -1)
+			if (_pEditView->execute(SCI_GETSELECTIONS) == 1)
 			{
+				pair<int, int> lineRange = _pEditView->getSelectionLinesRange();
 				auto anchorPos = _pEditView->execute(SCI_POSITIONFROMLINE, lineRange.first);
 				auto caretPos = _pEditView->execute(SCI_GETLINEENDPOSITION, lineRange.second);
 				_pEditView->execute(SCI_SETSELECTION, caretPos, anchorPos);
@@ -2949,29 +2976,6 @@ void Notepad_plus::command(int id)
 			break;
 		}
 
-		case IDM_HELP :
-		{
-			generic_string tmp((NppParameters::getInstance()).getNppPath());
-			generic_string nppHelpPath = tmp.c_str();
-
-			nppHelpPath += TEXT("\\user.manual\\documentation\\notepad-online-document.html");
-			if (::PathFileExists(nppHelpPath.c_str()))
-				::ShellExecute(NULL, TEXT("open"), nppHelpPath.c_str(), NULL, NULL, SW_SHOWNORMAL);
-			else
-			{
-				generic_string msg = nppHelpPath;
-				generic_string warning, title;
-				if (!_nativeLangSpeaker.getMsgBoxLang("NppHelpAbsentWarning", title, warning))
-				{
-					title = TEXT("File does not exist");
-					warning = TEXT("\rdoesn't exist. Please download it on Notepad++ site.");
-				}
-				msg += warning;
-				::MessageBox(_pPublicInterface->getHSelf(), msg.c_str(), title.c_str(), MB_OK);
-			}
-		}
-		break;
-
 		case IDM_HOMESWEETHOME :
 		{
 			::ShellExecute(NULL, TEXT("open"), TEXT("https://notepad-plus-plus.org/"), NULL, NULL, SW_SHOWNORMAL);
@@ -3542,7 +3546,6 @@ void Notepad_plus::command(int id)
 			case IDM_EDIT_FULLPATHTOCLIP :
 			case IDM_EDIT_FILENAMETOCLIP :
 			case IDM_EDIT_CURRENTDIRTOCLIP :
-			case IDM_EDIT_MARKEDTOCLIP:
 			case IDM_EDIT_CLEARREADONLY :
 			case IDM_EDIT_RTL :
 			case IDM_EDIT_LTR :
@@ -3613,6 +3616,13 @@ void Notepad_plus::command(int id)
 			case IDM_SEARCH_GONEXTMARKER4   :
 			case IDM_SEARCH_GONEXTMARKER5   :
 			case IDM_SEARCH_GONEXTMARKER_DEF:
+			case IDM_SEARCH_STYLE1TOCLIP:
+			case IDM_SEARCH_STYLE2TOCLIP:
+			case IDM_SEARCH_STYLE3TOCLIP:
+			case IDM_SEARCH_STYLE4TOCLIP:
+			case IDM_SEARCH_STYLE5TOCLIP:
+			case IDM_SEARCH_ALLSTYLESTOCLIP:
+			case IDM_SEARCH_MARKEDTOCLIP:
 			case IDM_SEARCH_VOLATILE_FINDNEXT:
 			case IDM_SEARCH_VOLATILE_FINDPREV:
 			case IDM_SEARCH_CUTMARKEDLINES   :
