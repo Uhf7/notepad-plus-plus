@@ -1540,9 +1540,15 @@ void Notepad_plus::command(int id)
 			_pEditView->execute(SCI_LINEDUPLICATE);
 			break;
 
-		case IDM_EDIT_REMOVE_DUP_LINES:
+		case IDM_EDIT_REMOVE_CONSECUTIVE_DUP_LINES:
 			_pEditView->execute(SCI_BEGINUNDOACTION);
 			removeDuplicateLines();
+			_pEditView->execute(SCI_ENDUNDOACTION);
+			break;
+
+		case IDM_EDIT_REMOVE_ANY_DUP_LINES:
+			_pEditView->execute(SCI_BEGINUNDOACTION);
+			_pEditView->removeAnyDuplicateLines();
 			_pEditView->execute(SCI_ENDUNDOACTION);
 			break;
 
@@ -3298,6 +3304,8 @@ void Notepad_plus::command(int id)
 		{
 			NppGUI & nppGUI = const_cast<NppGUI &>((NppParameters::getInstance()).getNppGUI());
 			::ShowWindow(_pPublicInterface->getHSelf(), nppGUI._isMaximized?SW_MAXIMIZE:SW_SHOW);
+			_dockingManager.showFloatingContainers(true);
+			restoreMinimizeDialogs();
 			fileNew();
 		}
 		break;
@@ -3306,6 +3314,8 @@ void Notepad_plus::command(int id)
 		{
 			NppGUI & nppGUI = const_cast<NppGUI &>((NppParameters::getInstance()).getNppGUI());
 			::ShowWindow(_pPublicInterface->getHSelf(), nppGUI._isMaximized?SW_MAXIMIZE:SW_SHOW);
+			_dockingManager.showFloatingContainers(true);
+			restoreMinimizeDialogs();
 
 			// Send sizing info to make window fit (specially to show tool bar. Fixed issue #2600)
 			::SendMessage(_pPublicInterface->getHSelf(), WM_SIZE, 0, 0);
@@ -3316,6 +3326,9 @@ void Notepad_plus::command(int id)
 		{
 			NppGUI & nppGUI = const_cast<NppGUI &>((NppParameters::getInstance()).getNppGUI());
 			::ShowWindow(_pPublicInterface->getHSelf(), nppGUI._isMaximized?SW_MAXIMIZE:SW_SHOW);
+			_dockingManager.showFloatingContainers(true);
+			restoreMinimizeDialogs();
+
 			BufferID bufferID = _pEditView->getCurrentBufferID();
 			Buffer * buf = MainFileManager.getBufferByID(bufferID);
 			if (!buf->isUntitled() || buf->docLength() != 0)
@@ -3330,6 +3343,8 @@ void Notepad_plus::command(int id)
 		{
 			NppGUI & nppGUI = const_cast<NppGUI &>((NppParameters::getInstance()).getNppGUI());
 			::ShowWindow(_pPublicInterface->getHSelf(), nppGUI._isMaximized?SW_MAXIMIZE:SW_SHOW);
+			_dockingManager.showFloatingContainers(true);
+			restoreMinimizeDialogs();
 
 			// Send sizing info to make window fit (specially to show tool bar. Fixed issue #2600)
 			::SendMessage(_pPublicInterface->getHSelf(), WM_SIZE, 0, 0);
@@ -3514,7 +3529,8 @@ void Notepad_plus::command(int id)
 			case IDM_EDIT_INS_TAB:
 			case IDM_EDIT_RMV_TAB:
 			case IDM_EDIT_DUP_LINE:
-			case IDM_EDIT_REMOVE_DUP_LINES:
+			case IDM_EDIT_REMOVE_CONSECUTIVE_DUP_LINES:
+			case IDM_EDIT_REMOVE_ANY_DUP_LINES:
 			case IDM_EDIT_TRANSPOSE_LINE:
 			case IDM_EDIT_SPLIT_LINES:
 			case IDM_EDIT_JOIN_LINES:

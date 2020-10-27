@@ -53,7 +53,7 @@
 
 using namespace std;
 
-enum tb_stat {tb_saved, tb_unsaved, tb_ro};
+enum tb_stat {tb_saved, tb_unsaved, tb_ro, tb_monitored};
 #define DIR_LEFT true
 #define DIR_RIGHT false
 
@@ -376,7 +376,7 @@ LRESULT Notepad_plus::init(HWND hwnd)
     //--Status Bar Section--//
 	bool willBeShown = nppGUI._statusBarShow;
     _statusBar.init(_pPublicInterface->getHinst(), hwnd, 6);
-	_statusBar.setPartWidth(STATUSBAR_DOC_SIZE, nppParam._dpiManager.scaleX(200));
+	_statusBar.setPartWidth(STATUSBAR_DOC_SIZE, nppParam._dpiManager.scaleX(220));
 	_statusBar.setPartWidth(STATUSBAR_CUR_POS, nppParam._dpiManager.scaleX(260));
 	_statusBar.setPartWidth(STATUSBAR_EOF_FORMAT, nppParam._dpiManager.scaleX(110));
 	_statusBar.setPartWidth(STATUSBAR_UNICODE_TYPE, nppParam._dpiManager.scaleX(120));
@@ -2979,7 +2979,7 @@ void Notepad_plus::maintainIndentation(TCHAR ch)
 		return;
 
 	if (type == L_C || type == L_CPP || type == L_JAVA || type == L_CS || type == L_OBJC ||
-		type == L_PHP || type == L_JS || type == L_JAVASCRIPT || type == L_JSP || type == L_CSS || type == L_PERL || type == L_RUST)
+		type == L_PHP || type == L_JS || type == L_JAVASCRIPT || type == L_JSP || type == L_CSS || type == L_PERL || type == L_RUST || type == L_POWERSHELL)
 	{
 		if (((eolMode == SC_EOL_CRLF || eolMode == SC_EOL_LF) && ch == '\n') ||
 			(eolMode == SC_EOL_CR && ch == '\r'))
@@ -3022,7 +3022,7 @@ void Notepad_plus::maintainIndentation(TCHAR ch)
 				_pEditView->setLineIndent(curLine, indentAmountPrevLine);
 			}
 			// These languages do no support single line control structures without braces.
-			else if (type == L_PERL || type == L_RUST)
+			else if (type == L_PERL || type == L_RUST || L_POWERSHELL)
 			{
 				_pEditView->setLineIndent(curLine, indentAmountPrevLine);
 			}
@@ -4977,14 +4977,14 @@ void Notepad_plus::getTaskListInfo(TaskListInfo *tli)
 	{
 		BufferID bufID = _pDocTab->getBufferByIndex(i);
 		Buffer * b = MainFileManager.getBufferByID(bufID);
-		int status = b->isReadOnly()?tb_ro:(b->isDirty()?tb_unsaved:tb_saved);
+		int status = b->isMonitoringOn()?tb_monitored:(b->isReadOnly()?tb_ro:(b->isDirty()?tb_unsaved:tb_saved));
 		tli->_tlfsLst.push_back(TaskLstFnStatus(currentView(), i, b->getFullPathName(), status, (void *)bufID));
 	}
 	for (int i = 0 ; i < nonCurrentNbDoc ; ++i)
 	{
 		BufferID bufID = _pNonDocTab->getBufferByIndex(i);
 		Buffer * b = MainFileManager.getBufferByID(bufID);
-		int status = b->isReadOnly()?tb_ro:(b->isDirty()?tb_unsaved:tb_saved);
+		int status = b->isMonitoringOn()?tb_monitored:(b->isReadOnly()?tb_ro:(b->isDirty()?tb_unsaved:tb_saved));
 		tli->_tlfsLst.push_back(TaskLstFnStatus(otherView(), i, b->getFullPathName(), status, (void *)bufID));
 	}
 }
@@ -7259,6 +7259,34 @@ void Notepad_plus::showQuote(const QuoteParams* quote) const
 
 	HANDLE hThread = ::CreateThread(NULL, 0, threadTextPlayer, &params, 0, NULL);
 	::CloseHandle(hThread);
+}
+
+void Notepad_plus::minimizeDialogs()
+{
+	static StaticDialog* modelessDlgs[] = {&_findReplaceDlg, &_aboutDlg, &_debugInfoDlg, &_runDlg, &_goToLineDlg, &_colEditorDlg, &_configStyleDlg,\
+		&_preference, &_pluginsAdminDlg, &_findCharsInRangeDlg, &_md5FromFilesDlg, &_md5FromTextDlg, &_sha2FromFilesDlg, &_sha2FromTextDlg, &_runMacroDlg};
+	
+	static size_t nbModelessDlg = sizeof(modelessDlgs) / sizeof(StaticDialog*);
+
+	for (size_t i = 0; i < nbModelessDlg; ++i)
+	{
+		StaticDialog* pDlg = modelessDlgs[i];
+		if (pDlg->isCreated() && pDlg->isVisible())
+		{
+			pDlg->display(false);
+			_sysTrayHiddenHwnd.push_back(pDlg->getHSelf());
+		}
+	}
+}
+
+void Notepad_plus::restoreMinimizeDialogs()
+{
+	size_t nbDialogs = _sysTrayHiddenHwnd.size();
+	for (int i = (static_cast<int>(nbDialogs) - 1); i >= 0; i--)
+	{
+		::ShowWindow(_sysTrayHiddenHwnd[i], SW_SHOW);
+		_sysTrayHiddenHwnd.erase(_sysTrayHiddenHwnd.begin() + i);
+	}
 }
 
 void Notepad_plus::launchDocumentBackupTask()

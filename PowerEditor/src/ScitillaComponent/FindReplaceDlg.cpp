@@ -219,10 +219,12 @@ void Searching::displaySectionCentered(int posStart, int posEnd, ScintillaEditVi
 	pEditView->execute(SCI_ENSUREVISIBLE, pEditView->execute(SCI_LINEFROMPOSITION, posEnd));
 
 	// Jump-scroll to center, if current position is out of view
-	pEditView->execute(SCI_SETYCARETPOLICY, CARET_JUMPS | CARET_EVEN);
+	pEditView->execute(SCI_SETVISIBLEPOLICY, CARET_JUMPS | CARET_EVEN);
+	pEditView->execute(SCI_ENSUREVISIBLEENFORCEPOLICY, pEditView->execute(SCI_LINEFROMPOSITION, isDownwards ? posEnd : posStart));
 	// When searching up, the beginning of the (possible multiline) result is important, when scrolling down the end
 	pEditView->execute(SCI_GOTOPOS, isDownwards ? posEnd : posStart);
-	pEditView->execute(SCI_SETYCARETPOLICY, CARET_EVEN);
+	pEditView->execute(SCI_SETVISIBLEPOLICY, CARET_EVEN);
+	pEditView->execute(SCI_ENSUREVISIBLEENFORCEPOLICY, pEditView->execute(SCI_LINEFROMPOSITION, isDownwards ? posEnd : posStart));
 
 	// Adjust so that we see the entire match; primarily horizontally
 	pEditView->execute(SCI_SCROLLRANGE, posStart, posEnd);
@@ -3744,26 +3746,23 @@ generic_string & Finder::prepareStringForClipboard(generic_string & s) const
 
 void Finder::copy()
 {
+	if (_scintView.execute(SCI_GETSELECTIONS) > 1) // multi-selection
+	{
+		// don't do anything if user has made a column/rectangular selection
+		return;
+	}
+
 	size_t fromLine, toLine;
 	{
-		const auto selStart = _scintView.execute(SCI_GETSELECTIONSTART);
-		const auto selEnd = _scintView.execute(SCI_GETSELECTIONEND);
-		const bool hasSelection = selStart != selEnd;
 		const pair<int, int> lineRange = _scintView.getSelectionLinesRange();
-		if (hasSelection && lineRange.first != lineRange.second)
-		{
-			fromLine = lineRange.first;
-			toLine = lineRange.second;
-		}
-		else
-		{
-			// Abuse fold levels to find out which lines to copy to clipboard.
-			// We get the current line and then the next line which has a smaller fold level (SCI_GETLASTCHILD).
-			// Then we loop all lines between them and determine which actually contain search results.
-			fromLine = _scintView.getCurrentLineNumber();
-			const int selectedLineFoldLevel = _scintView.execute(SCI_GETFOLDLEVEL, fromLine) & SC_FOLDLEVELNUMBERMASK;
-			toLine = _scintView.execute(SCI_GETLASTCHILD, fromLine, selectedLineFoldLevel);
-		}
+		fromLine = lineRange.first;
+		toLine = lineRange.second;
+
+		// Abuse fold levels to find out which lines to copy to clipboard.
+		// We get the current line and then the next line which has a smaller fold level (SCI_GETLASTCHILD).
+		// Then we loop all lines between them and determine which actually contain search results.
+		const int selectedLineFoldLevel = _scintView.execute(SCI_GETFOLDLEVEL, fromLine) & SC_FOLDLEVELNUMBERMASK;
+		toLine = _scintView.execute(SCI_GETLASTCHILD, toLine, selectedLineFoldLevel);
 	}
 
 	std::vector<generic_string> lines;
@@ -3780,7 +3779,7 @@ void Finder::copy()
 			}
 		}
 	}
-	const generic_string toClipboard = stringJoin(lines, TEXT("\r\n"));
+	const generic_string toClipboard = stringJoin(lines, TEXT("\r\n")) + TEXT("\r\n");
 	if (!toClipboard.empty())
 	{
 		if (!str2Clipboard(toClipboard, _hSelf))
