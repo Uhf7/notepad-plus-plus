@@ -6581,7 +6581,7 @@ void Notepad_plus::launchProjectPanel(int cmdID, ProjectPanel ** pProjPanel, int
 
 		::SendMessage(_pPublicInterface->getHSelf(), NPPM_MODELESSDIALOG, MODELESSDIALOGREMOVE, reinterpret_cast<LPARAM>((*pProjPanel)->getHSelf()));
 		// define the default docking behaviour
-		data.uMask = DWS_DF_CONT_LEFT | DWS_ICONTAB;
+		data.uMask = DWS_DF_CONT_LEFT | DWS_ICONTAB | DWS_TABNAME;
 		data.hIconTab = (HICON)::LoadImage(_pPublicInterface->getHinst(), MAKEINTRESOURCE(IDR_PROJECTPANEL_ICO), IMAGE_ICON, 14, 14, LR_LOADMAP3DCOLORS | LR_LOADTRANSPARENT);
 		data.pszModuleName = NPP_INTERNAL_FUCTION_STR;
 
@@ -6595,6 +6595,12 @@ void Notepad_plus::launchProjectPanel(int cmdID, ProjectPanel ** pProjPanel, int
 		generic_string title_temp = pNativeSpeaker->getAttrNameStr(PM_PROJECTPANELTITLE, "ProjectManager", "PanelTitle") + TEXT(" ") + title_no;
 		(*pProjPanel)->setPanelTitle(title_temp);
 		data.pszName = (*pProjPanel)->getPanelTitle();
+
+		static TCHAR tab[4][12];  // 3 Project panels, 1 garbage can
+		int idx = ((panelID >= 0) && (panelID < (_countof(tab)-1))) ? panelID : (_countof(tab)-1);
+		generic_strncpy(tab[idx], title_no.c_str(), _countof(tab[idx]));
+		data.pszTabName = tab[idx];
+
 		::SendMessage(_pPublicInterface->getHSelf(), NPPM_DMMREGASDCKDLG, 0, reinterpret_cast<LPARAM>(&data));
 
 		COLORREF fgColor = (NppParameters::getInstance()).getCurrentDefaultFgColor();

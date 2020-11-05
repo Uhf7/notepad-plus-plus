@@ -838,7 +838,7 @@ void DockingCont::drawTabItem(DRAWITEMSTRUCT *pDrawItemStruct)
 		return;
 
 	tTbData *TbData = (tTbData*) (tcItem.lParam);
-	const TCHAR *text = (TbData->pszShortName) ? TbData->pszShortName : TbData->pszName;
+	const TCHAR *text = ((TbData->uMask & DWS_TABNAME) && TbData->pszTabName) ? TbData->pszTabName : TbData->pszName;
 	int length = lstrlen(text);
 
 
@@ -1375,7 +1375,7 @@ void DockingCont::selectTab(int iTab)
 					}
 				}
 			}
-			const TCHAR *text = (TbData->pszShortName) ? TbData->pszShortName : TbData->pszName;
+			const TCHAR *text = ((TbData->uMask & DWS_TABNAME) && TbData->pszTabName) ? TbData->pszTabName : TbData->pszName;
 			generic_strncat (tabSizingText, TEXT(" "), _countof (tabSizingText));
 			generic_strncat (tabSizingText, text,      _countof (tabSizingText));
 			tcItem.pszText = tabSizingText;

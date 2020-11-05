@@ -47,7 +47,8 @@
 #define DWS_ICONTAB			0x00000001			// Icon for tabs are available
 #define DWS_ICONBAR			0x00000002			// Icon for icon bar are available (currently not supported)
 #define DWS_ADDINFO			0x00000004			// Additional information are in use
-#define DWS_PARAMSALL		(DWS_ICONTAB|DWS_ICONBAR|DWS_ADDINFO)
+#define DWS_TABNAME			0x00000008			// Additional information are in use
+#define DWS_PARAMSALL		(DWS_ICONTAB|DWS_ICONBAR|DWS_ADDINFO|DWS_TABNAME)
 
 // default docking values for first call of plugin
 #define DWS_DF_CONT_LEFT	(CONT_LEFT	<< 28)	// default docking on left
@@ -71,7 +72,7 @@ typedef struct {
 	RECT		rcFloat;		// floating position
 	int			iPrevCont;		// stores the privious container (toggling between float and dock)
 	const TCHAR*	pszModuleName;	// it's the plugin file name. It's used to identify the plugin
-	const TCHAR*	pszShortName;	// displayed in tabs if available
+	const TCHAR*	pszTabName;		// displayed in tabs if available
 } tTbData;
 
 
