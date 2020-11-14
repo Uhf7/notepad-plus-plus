@@ -41,6 +41,9 @@ using namespace std;
 #define INDEX_NODE        1
 #define INDEX_LEAF        2
 
+#define FL_SORTLOCALNODENAME   "SortTip"
+#define FL_RELOADLOCALNODENAME "ReloadTip"
+
 FunctionListPanel::~FunctionListPanel()
 {
 	for (const auto s : posStrs)

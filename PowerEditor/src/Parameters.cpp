@@ -4000,6 +4000,8 @@ generic_string NppParameters::getLocPathFromStr(const generic_string & localizat
 		return TEXT("irish.xml");
 	if (localizationCode == TEXT("sgs"))
 		return TEXT("samogitian.xml");
+	if (localizationCode == TEXT("yue"))
+		return TEXT("hongKongCantonese.xml");
 
 	return generic_string();
 }
@@ -5473,8 +5475,6 @@ void NppParameters::feedDockingManager(TiXmlNode *node)
 	if (element->Attribute(TEXT("bottomHeight"), &i))
 		_nppGUI._dockingData._bottomHight = i;
 
-
-
 	for (TiXmlNode *childNode = node->FirstChildElement(TEXT("FloatingWindow"));
 		childNode ;
 		childNode = childNode->NextSibling(TEXT("FloatingWindow")) )
@@ -5536,6 +5536,113 @@ void NppParameters::feedDockingManager(TiXmlNode *node)
 			int activeTab = 0;
 			dlgElement->Attribute(TEXT("activeTab"), &activeTab);
 			_nppGUI._dockingData._containerTabInfo.push_back(ContainerTabInfo(cont, activeTab));
+		}
+	}
+}
+
+void NppParameters::duplicateDockingManager(TiXmlNode* dockMngNode, TiXmlElement* dockMngElmt2Clone)
+{
+	if (!dockMngNode || !dockMngElmt2Clone) return;
+
+	TiXmlElement *dockMngElmt = dockMngNode->ToElement();
+	
+	int i;
+	if (dockMngElmt->Attribute(TEXT("leftWidth"), &i))
+		dockMngElmt2Clone->SetAttribute(TEXT("leftWidth"), i);
+
+	if (dockMngElmt->Attribute(TEXT("rightWidth"), &i))
+		dockMngElmt2Clone->SetAttribute(TEXT("rightWidth"), i);
+
+	if (dockMngElmt->Attribute(TEXT("topHeight"), &i))
+		dockMngElmt2Clone->SetAttribute(TEXT("topHeight"), i);
+
+	if (dockMngElmt->Attribute(TEXT("bottomHeight"), &i))
+		dockMngElmt2Clone->SetAttribute(TEXT("bottomHeight"), i);
+
+
+	for (TiXmlNode *childNode = dockMngNode->FirstChildElement(TEXT("FloatingWindow"));
+		childNode;
+		childNode = childNode->NextSibling(TEXT("FloatingWindow")))
+	{
+		TiXmlElement *floatElement = childNode->ToElement();
+		int cont;
+		if (floatElement->Attribute(TEXT("cont"), &cont))
+		{
+			TiXmlElement FWNode(TEXT("FloatingWindow"));
+			FWNode.SetAttribute(TEXT("cont"), cont);
+
+			int x = 0;
+			int y = 0;
+			int w = 100;
+			int h = 100;
+
+			floatElement->Attribute(TEXT("x"), &x);
+			FWNode.SetAttribute(TEXT("x"), x);
+
+			floatElement->Attribute(TEXT("y"), &y);
+			FWNode.SetAttribute(TEXT("y"), y);
+			
+			floatElement->Attribute(TEXT("width"), &w);
+			FWNode.SetAttribute(TEXT("width"), w);
+			
+			floatElement->Attribute(TEXT("height"), &h);
+			FWNode.SetAttribute(TEXT("height"), h);
+
+			dockMngElmt2Clone->InsertEndChild(FWNode);
+		}
+	}
+
+	for (TiXmlNode *childNode = dockMngNode->FirstChildElement(TEXT("PluginDlg"));
+		childNode;
+		childNode = childNode->NextSibling(TEXT("PluginDlg")))
+	{
+		TiXmlElement *dlgElement = childNode->ToElement();
+		const TCHAR *name = dlgElement->Attribute(TEXT("pluginName"));
+		TiXmlElement PDNode(TEXT("PluginDlg"));
+
+		int id;
+		const TCHAR *idStr = dlgElement->Attribute(TEXT("id"), &id);
+		if (name && idStr)
+		{
+			int curr = 0; // on left
+			int prev = 0; // on left
+
+			dlgElement->Attribute(TEXT("curr"), &curr);
+			dlgElement->Attribute(TEXT("prev"), &prev);
+
+			bool isVisible = false;
+			const TCHAR *val = dlgElement->Attribute(TEXT("isVisible"));
+			if (val)
+			{
+				isVisible = (lstrcmp(val, TEXT("yes")) == 0);
+			}
+
+			PDNode.SetAttribute(TEXT("pluginName"), name);
+			PDNode.SetAttribute(TEXT("id"), idStr);
+			PDNode.SetAttribute(TEXT("curr"), curr);
+			PDNode.SetAttribute(TEXT("prev"), prev);
+			PDNode.SetAttribute(TEXT("isVisible"), isVisible ? TEXT("yes") : TEXT("no"));
+
+			dockMngElmt2Clone->InsertEndChild(PDNode);
+		}
+	}
+
+	for (TiXmlNode *childNode = dockMngNode->FirstChildElement(TEXT("ActiveTabs"));
+		childNode;
+		childNode = childNode->NextSibling(TEXT("ActiveTabs")))
+	{
+		TiXmlElement *dlgElement = childNode->ToElement();
+		TiXmlElement CTNode(TEXT("ActiveTabs"));
+		int cont;
+		if (dlgElement->Attribute(TEXT("cont"), &cont))
+		{
+			int activeTab = 0;
+			dlgElement->Attribute(TEXT("activeTab"), &activeTab);
+
+			CTNode.SetAttribute(TEXT("cont"), cont);
+			CTNode.SetAttribute(TEXT("activeTab"), activeTab);
+
+			dockMngElmt2Clone->InsertEndChild(CTNode);
 		}
 	}
 }
@@ -5606,12 +5713,42 @@ bool NppParameters::writeScintillaParams()
 void NppParameters::createXmlTreeFromGUIParams()
 {
 	TiXmlNode *nppRoot = _pXmlUserDoc->FirstChild(TEXT("NotepadPlus"));
-	if (not nppRoot)
+	if (!nppRoot)
 	{
 		nppRoot = _pXmlUserDoc->InsertEndChild(TiXmlElement(TEXT("NotepadPlus")));
 	}
 
 	TiXmlNode *oldGUIRoot = nppRoot->FirstChildElement(TEXT("GUIConfigs"));
+	TiXmlElement* dockMngNodeDup = nullptr;
+	TiXmlNode* dockMngNodeOriginal = nullptr;
+	if (oldGUIRoot && _nppGUI._isCmdlineNosessionActivated)
+	{
+		for (TiXmlNode *childNode = oldGUIRoot->FirstChildElement(TEXT("GUIConfig"));
+			childNode;
+			childNode = childNode->NextSibling(TEXT("GUIConfig")))
+		{
+			TiXmlElement* element = childNode->ToElement();
+			const TCHAR* nm = element->Attribute(TEXT("name"));
+			if (nullptr == nm)
+				continue;
+
+			if (!lstrcmp(nm, TEXT("DockingManager")))
+			{
+				dockMngNodeOriginal = childNode;
+				break;
+			}
+		}
+
+		// Copy DockingParamNode
+		if (dockMngNodeOriginal)
+		{
+			dockMngNodeDup = new TiXmlElement(TEXT("GUIConfig"));
+			dockMngNodeDup->SetAttribute(TEXT("name"), TEXT("DockingManager"));
+
+			duplicateDockingManager(dockMngNodeOriginal, dockMngNodeDup);
+		}
+	}
+
 	// Remove the old root nod if it exist
 	if (oldGUIRoot)
 	{
@@ -6066,7 +6203,15 @@ void NppParameters::createXmlTreeFromGUIParams()
 
 	// <GUIConfig name="DockingManager" leftWidth="328" rightWidth="359" topHeight="200" bottomHeight="436">
 	// ...
-	insertDockingParamNode(newGUIRoot);
+	if (_nppGUI._isCmdlineNosessionActivated && dockMngNodeDup)
+	{
+		newGUIRoot->InsertEndChild(*dockMngNodeDup);
+		delete dockMngNodeDup;
+	}
+	else
+	{
+		insertDockingParamNode(newGUIRoot);
+	}
 }
 
 bool NppParameters::writeFindHistory()

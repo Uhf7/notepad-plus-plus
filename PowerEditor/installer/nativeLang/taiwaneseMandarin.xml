@@ -288,7 +288,7 @@
                     <Item id="46001" name="設定程式語言格式..."/>
                     <Item id="46250" name="定義程式語言..."/>
                     <Item id="46300" name="開啟自訂程式語言資料夾..."/>
-                    <Item id="46180" name="偏好設定"/>
+                    <Item id="46180" name="使用現行自訂"/>
                     <Item id="47000" name="關於 Notepad++..."/>
                     <Item id="47001" name="Notepad++ 官方網站"/>
                     <Item id="47002" name="Notepad++ GitHub 專案頁"/>
@@ -1174,6 +1174,9 @@
         <FolderAsWorkspace>
             <PanelTitle name="資料夾工作區"/>
             <SelectFolderFromBrowserString name="選擇一個資料夾以加入資料夾工作區"/>
+            <ExpandAllFoldersTip name="展開所有文件夾"/>
+            <CollapseAllFoldersTip name="收折所有文件夾"/>
+            <LocateCurrentFileTip name="現行文件位置"/>
             <Menus>
                 <Item id="3511" name="移除"/>
                 <Item id="3512" name="全部移除"/>
@@ -1279,7 +1282,8 @@
             <finder-close-this value="關閉這個搜尋結果"/>
             <finder-collapse-all value="層數全部收折"/>
             <finder-uncollapse-all value="層數全部展開"/>
-            <finder-copy value="複製"/>
+            <finder-copy value="複製全行"/>
+            <finder-copy-verbatim value="複製"/>
             <finder-select-all value="全部選取"/>
             <finder-clear-all value="全部清除"/>
             <finder-open-all value="全部開啟"/>

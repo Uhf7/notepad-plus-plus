@@ -1855,6 +1855,7 @@ private:
 	void feedFileListParameters(TiXmlNode *node);
 	void feedScintillaParam(TiXmlNode *node);
 	void feedDockingManager(TiXmlNode *node);
+	void duplicateDockingManager(TiXmlNode *dockMngNode, TiXmlElement* dockMngElmt2Clone);
 	void feedFindHistoryParameters(TiXmlNode *node);
 	void feedProjectPanelsParameters(TiXmlNode *node);
 	void feedFileBrowserParameters(TiXmlNode *node);

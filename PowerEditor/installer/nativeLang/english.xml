@@ -351,13 +351,13 @@ The comments are here for explanation, it's not necessary to translate them.
                     <Item CMID="1" name="Close All BUT This"/>
                     <Item CMID="2" name="Save"/>
                     <Item CMID="3" name="Save As..."/>
-                    <Item CMID="4" name="Print"/>
+                    <Item CMID="4" name="Print..."/>
                     <Item CMID="5" name="Move to Other View"/>
                     <Item CMID="6" name="Clone to Other View"/>
                     <Item CMID="7" name="Full File Path to Clipboard"/>
                     <Item CMID="8" name="Filename to Clipboard"/>
                     <Item CMID="9" name="Current Dir. Path to Clipboard"/>
-                    <Item CMID="10" name="Rename"/>
+                    <Item CMID="10" name="Rename..."/>
                     <Item CMID="11" name="Move to Recycle Bin"/>
                     <Item CMID="12" name="Read-Only"/>
                     <Item CMID="13" name="Clear Read-Only Flag"/>
@@ -1119,6 +1119,7 @@ Continue?"/> <!-- HowToReproduce: when you openned file is modified and saved, t
             <DocReloadWarning title="Reload" message="Are you sure you want to reload the current file and lose the changes made in Notepad++?"/>
             <FileLockedWarning title="Save failed" message="Please check whether if this file is opened in another program"/>
             <FileAlreadyOpenedInNpp title="" message="The file is already opened in Notepad++."/> <!-- HowToReproduce: Open a new document and open a file "c:/tmp/foo", save this new document by choosing "c:/tmp/foo" as file to save, reply the override popup "yes", then this message appears. -->
+            <RenameTabTemporaryNameAlreadyInUse title="Rename failed" message="The specified name is already in use on another tab."/> <!-- HowToReproduce: Rename the tab of an untitled document and provide a name that is the same as an already-existing tab of an untitled document. -->
             <DeleteFileFailed title="Delete File" message="Delete File failed"/> <!-- HowToReproduce: this message prevents from system failure. It's hard to reproduce. -->
 
             <NbFileToOpenImportantWarning title="Amount of files to open is too large" message="$INT_REPLACE$ files are about to be opened.
@@ -1230,6 +1231,9 @@ Continue?"/>
         <FolderAsWorkspace>
             <PanelTitle name="Folder as Workspace"/>
             <SelectFolderFromBrowserString name="Select a folder to add in Folder as Workspace panel"/>
+            <ExpandAllFoldersTip name="Expand all folders"/>
+            <CollapseAllFoldersTip name="Collapse all folders"/>
+            <LocateCurrentFileTip name="Locate current file"/>
             <Menus>
                 <Item id="3511" name="Remove"/>
                 <Item id="3512" name="Remove All"/>
