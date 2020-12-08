@@ -323,7 +323,7 @@ public :
 		// Show finder and set focus
 		if (_pFinder) 
 		{
-			::SendMessage(_hParent, NPPM_DMMSHOW, 0, reinterpret_cast<LPARAM>(_pFinder->getHSelf()));
+			_pFinder->display();
 			_pFinder->_scintView.getFocus();
 		}
 	};

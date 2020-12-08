@@ -4454,6 +4454,17 @@ void NppParameters::feedGUIParameters(TiXmlNode *node)
 			}
 		}
 
+		else if (!lstrcmp(nm, TEXT("uriCustomizedSchemes")))
+		{
+			TiXmlNode *n = childNode->FirstChild();
+			if (n)
+			{
+				const TCHAR* val = n->Value();
+				if (val)
+				_nppGUI._uriSchemes = val;
+			}
+		}
+
 		else if (!lstrcmp(nm, TEXT("CheckHistoryFiles")))
 		{
 			TiXmlNode *n = childNode->FirstChild();
@@ -5271,6 +5282,16 @@ void NppParameters::feedScintillaParam(TiXmlNode *node)
 			_svp._lineNumberMarginShow = false;
 	}
 
+	// Line Number Margin dynamic width
+	nm = element->Attribute(TEXT("lineNumberDynamicWidth"));
+	if (nm)
+	{
+		if (!lstrcmp(nm, TEXT("yes")))
+			_svp._lineNumberMarginDynamicWidth = true;
+		else if (!lstrcmp(nm, TEXT("no")))
+			_svp._lineNumberMarginDynamicWidth = false;
+	}
+
 	// Bookmark Margin
 	nm = element->Attribute(TEXT("bookMarkMargin"));
 	if (nm)
@@ -5672,6 +5693,7 @@ bool NppParameters::writeScintillaParams()
 	}
 
 	(scintNode->ToElement())->SetAttribute(TEXT("lineNumberMargin"), _svp._lineNumberMarginShow?TEXT("show"):TEXT("hide"));
+	(scintNode->ToElement())->SetAttribute(TEXT("lineNumberDynamicWidth"), _svp._lineNumberMarginDynamicWidth ?TEXT("yes"):TEXT("no"));
 	(scintNode->ToElement())->SetAttribute(TEXT("bookMarkMargin"), _svp._bookMarkMarginShow?TEXT("show"):TEXT("hide"));
 	(scintNode->ToElement())->SetAttribute(TEXT("indentGuideLine"), _svp._indentGuideLineShow?TEXT("show"):TEXT("hide"));
 	const TCHAR *pFolderStyleStr = (_svp._folderStyle == FOLDER_STYLE_SIMPLE)?TEXT("simple"):
@@ -6010,6 +6032,12 @@ void NppParameters::createXmlTreeFromGUIParams()
 		GUIConfigElement->InsertEndChild(TiXmlText(szStr));
 	}
 
+	// <GUIConfig name="uriCustomizedSchemes">svn://</GUIConfig>
+	{
+		TiXmlElement *GUIConfigElement = (newGUIRoot->InsertEndChild(TiXmlElement(TEXT("GUIConfig"))))->ToElement();
+		GUIConfigElement->SetAttribute(TEXT("name"), TEXT("uriCustomizedSchemes"));
+		GUIConfigElement->InsertEndChild(TiXmlText(_nppGUI._uriSchemes.c_str()));
+	}
 	// <GUIConfig name = "globalOverride" fg = "no" bg = "no" font = "no" fontSize = "no" bold = "no" italic = "no" underline = "no" / >
 	{
 		TiXmlElement *GUIConfigElement = (newGUIRoot->InsertEndChild(TiXmlElement(TEXT("GUIConfig"))))->ToElement();
