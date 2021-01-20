@@ -452,10 +452,9 @@ int FindReplaceDlg::saveComboHistory(int id, int maxcount, vector<generic_string
 	int count = static_cast<int32_t>(::SendMessage(hCombo, CB_GETCOUNT, 0, 0));
 	count = min(count, maxcount);
 
-    if (count == CB_ERR) return 0;
+	if (count == CB_ERR) return 0;
 
-    if (count)
-        strings.clear();
+	strings.clear();
 
 	if (saveEmpty)
 	{
@@ -465,7 +464,7 @@ int FindReplaceDlg::saveComboHistory(int id, int maxcount, vector<generic_string
 		}
 	}
 
-    for (int i = 0 ; i < count ; ++i)
+	for (int i = 0 ; i < count ; ++i)
 	{
 		auto cbTextLen = ::SendMessage(hCombo, CB_GETLBTEXTLEN, i, 0);
 		if (cbTextLen <= FINDREPLACE_MAXLENGTH - 1)
@@ -474,7 +473,7 @@ int FindReplaceDlg::saveComboHistory(int id, int maxcount, vector<generic_string
 			strings.push_back(generic_string(text));
 		}
 	}
-    return count;
+	return count;
 }
 
 void FindReplaceDlg::updateCombos()
@@ -557,14 +556,6 @@ void Finder::gotoFoundLine()
 
 	(*_ppEditView)->_positionRestoreNeeded = false;
 	Searching::displaySectionCentered(fInfo._start, fInfo._end, *_ppEditView);
-
-	// Then we colourise the double clicked line
-	setFinderStyle();
-
-	_scintView.execute(SCI_STYLESETEOLFILLED, SCE_SEARCHRESULT_HIGHLIGHT_LINE, true);
-	_scintView.execute(SCI_STARTSTYLING, start, STYLING_MASK);
-	_scintView.execute(SCI_SETSTYLING, end - start + 2, SCE_SEARCHRESULT_HIGHLIGHT_LINE);
-	_scintView.execute(SCI_COLOURISE, start, end + 1);
 }
 
 void Finder::deleteResult()
@@ -883,12 +874,16 @@ INT_PTR CALLBACK FindReplaceDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM
 			COMBOBOXINFO cbinfo = { sizeof(COMBOBOXINFO) };
 			GetComboBoxInfo(hFindCombo, &cbinfo);
 			originalComboEditProc = SetWindowLongPtr(cbinfo.hwndItem, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(comboEditProc));
+			SetWindowLongPtr(cbinfo.hwndItem, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(cbinfo.hwndCombo));
 			GetComboBoxInfo(hReplaceCombo, &cbinfo);
 			SetWindowLongPtr(cbinfo.hwndItem, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(comboEditProc));
+			SetWindowLongPtr(cbinfo.hwndItem, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(cbinfo.hwndCombo));
 			GetComboBoxInfo(hFiltersCombo, &cbinfo);
 			SetWindowLongPtr(cbinfo.hwndItem, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(comboEditProc));
+			SetWindowLongPtr(cbinfo.hwndItem, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(cbinfo.hwndCombo));
 			GetComboBoxInfo(hDirCombo, &cbinfo);
 			SetWindowLongPtr(cbinfo.hwndItem, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(comboEditProc));
+			SetWindowLongPtr(cbinfo.hwndItem, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(cbinfo.hwndCombo));
 
 			if ((NppParameters::getInstance()).getNppGUI()._monospacedFontFindDlg)
 			{
@@ -2117,7 +2112,23 @@ int FindReplaceDlg::processAll(ProcessOperation op, const FindOption *opt, bool 
 	findReplaceInfo._txt2replace = txt2replace;
 	findReplaceInfo._startRange = startPosition;
 	findReplaceInfo._endRange = endPosition;
-	return processRange(op, findReplaceInfo, pFindersInfo, pOptions, colourStyleID);
+
+	int nbProcessed = processRange(op, findReplaceInfo, pFindersInfo, pOptions, colourStyleID);
+
+	if (nbProcessed > 0 && op == ProcessReplaceAll && pOptions->_isInSelection)
+	{
+		int newDocLength = static_cast<int>((*_ppEditView)->execute(SCI_GETLENGTH));
+		endPosition += newDocLength - docLength;
+		(*_ppEditView)->execute(SCI_SETSELECTION, endPosition, startPosition);
+		(*_ppEditView)->execute(SCI_SCROLLRANGE, startPosition, endPosition);
+		if (startPosition == endPosition)
+		{
+			setChecked(IDC_IN_SELECTION_CHECK, false);
+			enableFindDlgItem(IDC_IN_SELECTION_CHECK, false);
+		}
+	}
+
+	return nbProcessed;
 }
 
 int FindReplaceDlg::processRange(ProcessOperation op, FindReplaceInfo & findReplaceInfo, const FindersInfo * pFindersInfo, const FindOption *opt, int colourStyleID, ScintillaEditView *view2Process)
@@ -2453,9 +2464,9 @@ void FindReplaceDlg::findAllIn(InWhat op)
 		_pFinder = new Finder();
 		_pFinder->init(_hInst, (*_ppEditView)->getHParent(), _ppEditView);
 		_pFinder->setVolatiled(false);
-		
+
 		tTbData	data = {0};
-		_pFinder->create(&data, false);
+		_pFinder->create(&data);
 		::SendMessage(_hParent, NPPM_MODELESSDIALOG, MODELESSDIALOGREMOVE, reinterpret_cast<LPARAM>(_pFinder->getHSelf()));
 		// define the default docking behaviour
 		data.uMask = DWS_DF_CONT_BOTTOM | DWS_ICONTAB | DWS_ADDINFO;
@@ -2467,9 +2478,10 @@ void FindReplaceDlg::findAllIn(InWhat op)
 		// the dlgDlg should be the index of funcItem where the current function pointer is
 		// in this case is DOCKABLE_DEMO_INDEX
 		data.dlgID = 0;
-		
+
 		NativeLangSpeaker *pNativeSpeaker = (NppParameters::getInstance()).getNativeLangSpeaker();
 		generic_string text = pNativeSpeaker->getLocalizedStrFromID("find-result-caption", TEXT(""));
+
 		if (!text.empty())
 		{
 			_findResTitle = text;
@@ -2547,6 +2559,8 @@ void FindReplaceDlg::findAllIn(InWhat op)
 		generic_string text = _pFinder->getHitsString(_findAllResult);
 		wsprintf(_findAllResultStr, text.c_str());
 
+		bool isRTL = (*_ppEditView)->isTextDirectionRTL();
+		_pFinder->_scintView.changeTextDirection(isRTL);
 		if (_findAllResult) 
 		{
 			focusOnFinder();
@@ -2565,11 +2579,11 @@ void FindReplaceDlg::findAllIn(InWhat op)
 Finder * FindReplaceDlg::createFinder()
 {
 	Finder *pFinder = new Finder();
-
 	pFinder->init(_hInst, (*_ppEditView)->getHParent(), _ppEditView);
-	
+
 	tTbData	data = { 0 };
-	pFinder->create(&data, false);
+	bool isRTL = _pFinder->_scintView.isTextDirectionRTL();
+	pFinder->create(&data, isRTL);
 	::SendMessage(_hParent, NPPM_MODELESSDIALOG, MODELESSDIALOGREMOVE, reinterpret_cast<WPARAM>(pFinder->getHSelf()));
 	// define the default docking behaviour
 	data.uMask = DWS_DF_CONT_BOTTOM | DWS_ICONTAB | DWS_ADDINFO;
@@ -2593,6 +2607,7 @@ Finder * FindReplaceDlg::createFinder()
 	::SendMessage(_hParent, NPPM_DMMREGASDCKDLG, 0, reinterpret_cast<LPARAM>(&data));
 
 	pFinder->_scintView.init(_hInst, pFinder->getHSelf());
+	pFinder->_scintView.changeTextDirection(isRTL);
 
 	// Subclass the ScintillaEditView for the Finder (Scintilla doesn't notify all key presses)
 	originalFinderProc = SetWindowLongPtr(pFinder->_scintView.getHSelf(), GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(finderProc));
@@ -2742,7 +2757,6 @@ void FindReplaceDlg::enableReplaceFunc(bool isEnable)
 	showFindDlgItem(IDREPLACE, isEnable);
 	showFindDlgItem(IDREPLACEWITH, isEnable);
 	showFindDlgItem(IDREPLACEALL, isEnable);
-	showFindDlgItem(IDREPLACEINSEL, isEnable);
 	showFindDlgItem(IDC_REPLACE_OPENEDFILES, isEnable);
 	showFindDlgItem(IDC_REPLACEINSELECTION);
 	showFindDlgItem(IDC_IN_SELECTION_CHECK);
@@ -3350,7 +3364,31 @@ LRESULT FAR PASCAL FindReplaceDlg::finderProc(HWND hwnd, UINT message, WPARAM wP
 
 LRESULT FAR PASCAL FindReplaceDlg::comboEditProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	if (message == WM_CHAR && wParam == 0x7F) // ASCII "DEL" (Ctrl+Backspace)
+	HWND hwndCombo = reinterpret_cast<HWND>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
+
+	bool isDropped = ::SendMessage(hwndCombo, CB_GETDROPPEDSTATE, 0, 0) != 0;
+
+	if (isDropped && (message == WM_KEYDOWN) && (wParam == VK_DELETE))
+	{
+		int curSel = static_cast<int>(::SendMessage(hwndCombo, CB_GETCURSEL, 0, 0));
+		if (curSel != CB_ERR)
+		{
+			int itemsRemaining = static_cast<int>(::SendMessage(hwndCombo, CB_DELETESTRING, curSel, 0));
+			// if we close the dropdown and reopen it, it will be correctly-sized for remaining items
+			::SendMessage(hwndCombo, CB_SHOWDROPDOWN, FALSE, 0);
+			if (itemsRemaining > 0)
+			{
+				if (itemsRemaining == curSel)
+				{
+					--curSel;
+				}
+				::SendMessage(hwndCombo, CB_SETCURSEL, curSel, 0);
+				::SendMessage(hwndCombo, CB_SHOWDROPDOWN, TRUE, 0);
+			}
+			return 0;
+		}
+	}
+	else if (message == WM_CHAR && wParam == 0x7F) // ASCII "DEL" (Ctrl+Backspace)
 	{
 		delLeftWordInEdit(hwnd);
 		return 0;
@@ -3380,7 +3418,6 @@ void FindReplaceDlg::enableMarkFunc()
 	showFindDlgItem(IDREPLACE, false);
 	showFindDlgItem(IDREPLACEWITH, false);
 	showFindDlgItem(IDREPLACEALL, false);
-	showFindDlgItem(IDREPLACEINSEL, false);
 	showFindDlgItem(IDC_REPLACE_OPENEDFILES, false);
 	showFindDlgItem(IDC_REPLACEINSELECTION, false);
 
@@ -3655,7 +3692,10 @@ void Finder::addSearchHitCount(int count, int countSearched, bool isMatchLines, 
 void Finder::add(FoundInfo fi, SearchResultMarking mi, const TCHAR* foundline)
 {
 	_pMainFoundInfos->push_back(fi);
-	generic_string str = TEXT("\tLine ");
+
+	generic_string str = TEXT("\t");
+	str += _prefixLineStr;
+	str += TEXT(" ");
 
 	TCHAR lnb[16];
 	wsprintf(lnb, TEXT("%d"), fi._lineNumber);
@@ -3723,8 +3763,9 @@ void Finder::wrapLongLinesToggle()
 
 bool Finder::isLineActualSearchResult(const generic_string & s) const
 {
-	const auto firstColon = s.find(TEXT("\tLine "));
-	return (firstColon == 0);
+	// actual-search-result lines are the only type that start with a tab character
+	// sample: "\tLine 123: xxxxxxHITxxxxxx"
+	return (s.find(TEXT("\t")) == 0);
 }
 
 generic_string & Finder::prepareStringForClipboard(generic_string & s) const
@@ -3796,7 +3837,9 @@ void Finder::copy()
 
 void Finder::beginNewFilesSearch()
 {
-	//_scintView.execute(SCI_SETLEXER, SCLEX_NULL);
+	NativeLangSpeaker* pNativeSpeaker = (NppParameters::getInstance()).getNativeLangSpeaker();
+	_prefixLineStr = pNativeSpeaker->getLocalizedStrFromID("find-result-line-prefix", TEXT("Line"));
+
 
 	_scintView.execute(SCI_SETCURRENTPOS, 0);
 	_pMainFoundInfos = _pMainFoundInfos == &_foundInfos1 ? &_foundInfos2 : &_foundInfos1;

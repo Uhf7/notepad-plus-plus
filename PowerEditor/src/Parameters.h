@@ -203,8 +203,11 @@ struct Session
 	size_t _activeView = 0;
 	size_t _activeMainIndex = 0;
 	size_t _activeSubIndex = 0;
+	bool _includeFileBrowser = false;
+	generic_string _fileBrowserSelectedItem;
 	std::vector<sessionFileInfo> _mainViewFiles;
 	std::vector<sessionFileInfo> _subViewFiles;
+	std::vector<generic_string> _fileBrowserRoots;
 };
 
 
@@ -231,6 +234,7 @@ struct CmdLineParams
 
 	LangType _langType = L_EXTERNAL;
 	generic_string _localizationPath;
+
 	generic_string _easterEggName;
 	unsigned char _quoteType = '\0';
 	int _ghostTypingSpeed = -1; // -1: initial value  1: slow  2: fast  3: speed of light
@@ -822,7 +826,7 @@ struct NppGUI final
 	bool _rememberLastSession = true; // remember next session boolean will be written in the settings
 	bool _isCmdlineNosessionActivated = false; // used for if -nosession is indicated on the launch time
 	bool _detectEncoding = true;
-	bool _setSaveDlgExtFiltToAllTypesForNormText = false;
+	bool _setSaveDlgExtFiltToAllTypes = false;
 	bool _doTaskList = true;
 	bool _maitainIndent = true;
 	bool _enableSmartHilite = true;
@@ -1681,6 +1685,11 @@ public:
 	void setUseNewStyleSaveDlg(bool v) {
 		_nppGUI._useNewStyleSaveDlg = v;
 	}
+
+	void setCmdSettingsDir(const generic_string& settingsDir) {
+		_cmdSettingsDir = settingsDir;
+	};
+
 	DPIManager _dpiManager;
 
 	generic_string static getSpecialFolderLocation(int folderKind);
@@ -1709,7 +1718,6 @@ private:
 	std::vector<UdlXmlFileState> _pXmlUserLangsDoc;
 	TiXmlDocument *_pXmlToolIconsDoc = nullptr;
 	TiXmlDocument *_pXmlShortcutDoc = nullptr;
-	TiXmlDocument *_pXmlSessionDoc = nullptr;
 	TiXmlDocument *_pXmlBlacklistDoc = nullptr;
 
 	TiXmlDocumentA *_pXmlNativeLangDocA = nullptr;
@@ -1719,7 +1727,7 @@ private:
 
 	NppGUI _nppGUI;
 	ScintillaViewParams _svp;
-	Lang *_langList[NB_LANG];
+	Lang *_langList[NB_LANG] = {};
 	int _nbLang = 0;
 
 	// Recent File History
@@ -1758,6 +1766,8 @@ private:
 	WNDPROC _enableThemeDialogTextureFuncAddr = nullptr;
 	bool _isLocal;
 	bool _isx64 = false; // by default 32-bit
+
+	generic_string _cmdSettingsDir;
 
 public:
 	void setShortcutDirty() { _isAnyShortcutModified = true; };
@@ -1849,7 +1859,7 @@ private:
 	bool getUserCmdsFromXmlTree();
 	bool getPluginCmdsFromXmlTree();
 	bool getScintKeysFromXmlTree();
-	bool getSessionFromXmlTree(TiXmlDocument *pSessionDoc = NULL, Session *session = NULL);
+	bool getSessionFromXmlTree(TiXmlDocument *pSessionDoc, Session& session);
 	bool getBlackListFromXmlTree();
 
 	void feedGUIParameters(TiXmlNode *node);

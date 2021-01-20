@@ -155,7 +155,7 @@ IDD_PREFERENCE_SUB_DEFAULTDIRECTORY DIALOGEX 0, 0, 455, 185
 STYLE DS_SETFONT | DS_FIXEDSYS | DS_CONTROL | WS_CHILD
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    GROUPBOX        "Default Directory (Open/Save)",IDC_OPENSAVEDIR_GR_STATIC,110,29,232,101,BS_CENTER
+    GROUPBOX        "Default Open/Save file Directory",IDC_OPENSAVEDIR_GR_STATIC,110,29,232,101,BS_CENTER
     CONTROL         "Follow current document",IDC_OPENSAVEDIR_FOLLOWCURRENT_RADIO,"Button",BS_AUTORADIOBUTTON | WS_GROUP,118,60,200,10
     CONTROL         "Remember last used directory",IDC_OPENSAVEDIR_REMEMBERLAST_RADIO,"Button",BS_AUTORADIOBUTTON,118,75,217,10
     CONTROL         "",IDC_OPENSAVEDIR_ALWAYSON_RADIO,"Button",BS_AUTORADIOBUTTON,118,89,11,10
@@ -429,7 +429,7 @@ BEGIN
 
 	// "Enable Notepad++ auto-updater" should be always the 1st item, because it'll be hidden if GUP.exe is absent
     CONTROL         "Enable Notepad++ auto-updater",IDC_CHECK_AUTOUPDATE,"Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,37,94,217,10
-    CONTROL         "Set Save dialog file extension filter to .* instead of .txt for Normal Text",IDC_CHECK_SAVEDLGEXTFILTALLTYPESFORNORMTEXT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,37,109,267,10
+    CONTROL         "Set Save dialog file extension filter to *.*",IDC_CHECK_SAVEDLGEXTFILTALLTYPES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,37,109,267,10
     CONTROL         "Autodetect character encoding",IDC_CHECK_DETECTENCODING,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,37,124,217,10
     CONTROL         "Minimize to system tray",IDC_CHECK_MIN2SYSTRAY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,37,139,217,10
     CONTROL         "Show only filename in title bar",IDC_CHECK_SHORTTITLE,"Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,37,154,217,10

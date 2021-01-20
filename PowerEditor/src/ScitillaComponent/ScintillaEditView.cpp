@@ -2479,6 +2479,24 @@ void ScintillaEditView::beginOrEndSelect()
 	}
 }
 
+void ScintillaEditView::showMargin(int whichMarge, bool willBeShowed)
+{
+	if (whichMarge == _SC_MARGE_LINENUMBER)
+	{
+		bool forcedToHide = !willBeShowed;
+		updateLineNumbersMargin(forcedToHide);
+	}
+	else
+	{
+		int width = 3;
+		if (whichMarge == _SC_MARGE_SYBOLE)
+			width = NppParameters::getInstance()._dpiManager.scaleX(100) >= 150 ? 20 : 16;
+		else if (whichMarge == _SC_MARGE_FOLDER)
+			width = NppParameters::getInstance()._dpiManager.scaleX(100) >= 150 ? 18 : 14;
+		execute(SCI_SETMARGINWIDTHN, whichMarge, willBeShowed ? width : 0);
+	}
+}
+
 void ScintillaEditView::updateBeginEndSelectPosition(bool is_insert, size_t position, size_t length)
 {
 	if (_beginSelectPosition != -1 && static_cast<long long>(position) < _beginSelectPosition - 1)
@@ -3327,6 +3345,22 @@ void ScintillaEditView::foldChanged(size_t line, int levelNow, int levelPrev)
 	}
 }
 
+bool ScintillaEditView::getIndicatorRange(int indicatorNumber, int *from, int *to, int *cur)
+{
+	int curPos = static_cast<int>(execute(SCI_GETCURRENTPOS));
+	int indicMsk = static_cast<int>(execute(SCI_INDICATORALLONFOR, curPos));
+	if (!(indicMsk & (1 << indicatorNumber)))
+		return false;
+	int startPos = static_cast<int>(execute(SCI_INDICATORSTART, indicatorNumber, curPos));
+	int endPos = static_cast<int>(execute(SCI_INDICATOREND, indicatorNumber, curPos));
+	if ((curPos < startPos) || (curPos > endPos))
+		return false;
+	if (from) *from = startPos;
+	if (to) *to = endPos;
+	if (cur) *cur = curPos;
+	return true;
+};
+
 
 void ScintillaEditView::scrollPosToCenter(size_t pos)
 {
@@ -3347,6 +3381,7 @@ void ScintillaEditView::scrollPosToCenter(size_t pos)
 		middleLine = lastVisibleDocLine -  nbLine/2;
 	int nbLines2scroll =  line - middleLine;
 	scroll(0, nbLines2scroll);
+	execute(SCI_ENSUREVISIBLEENFORCEPOLICY, line);
 }
 
 void ScintillaEditView::hideLines()
