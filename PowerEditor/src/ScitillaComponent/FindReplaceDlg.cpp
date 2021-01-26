@@ -1258,17 +1258,16 @@ INT_PTR CALLBACK FindReplaceDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM
 						{
 							_options._directory += TEXT("\\");
 						}
-
-						HWND hFindCombo = ::GetDlgItem(_hSelf, IDFINDWHAT);
-						combo2ExtendedMode(IDFINDWHAT);
-						_options._str2Search = getTextFromCombo(hFindCombo);
-						updateCombo(IDFINDWHAT);
-
-						nppParamInst._isFindReplacing = true;
-						if (isMacroRecording) saveInMacro(wParam, FR_OP_FIND + FR_OP_FIF);
-						findAllIn(FILES_IN_DIR);
-						nppParamInst._isFindReplacing = false;
 					}
+					HWND hFindCombo = ::GetDlgItem(_hSelf, IDFINDWHAT);
+					combo2ExtendedMode(IDFINDWHAT);
+					_options._str2Search = getTextFromCombo(hFindCombo);
+					updateCombo(IDFINDWHAT);
+
+					nppParamInst._isFindReplacing = true;
+					if (isMacroRecording) saveInMacro(wParam, FR_OP_FIND + FR_OP_FIF);
+					findAllIn(FILES_IN_DIR);
+					nppParamInst._isFindReplacing = false;
 				}
 				return TRUE;
 
