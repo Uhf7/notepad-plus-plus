@@ -74,7 +74,7 @@ int ValueDlg::reSizeValueBox()
 
 	RECT rcText;
 	::SendMessage(hEdit, EM_GETRECT, 0, reinterpret_cast<LPARAM>(&rcText));
-	DWORD m = ::SendMessage(hEdit, EM_GETMARGINS, 0, 0);
+	DWORD m = (DWORD)::SendMessage(hEdit, EM_GETMARGINS, 0, 0);
 	int margins = LOWORD(m) + HIWORD(m);
 	int textWidth = rcText.right - rcText.left;
 	int frameWidth = w - textWidth;

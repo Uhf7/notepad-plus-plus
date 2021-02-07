@@ -2042,7 +2042,7 @@ int FindReplaceDlg::markAllInc(const FindOption *opt)
 	return nbFound;
 }
 
-int FindReplaceDlg::processAll(ProcessOperation op, const FindOption *opt, bool isEntire, const FindersInfo *pFindersInfo, int colourStyleID)
+int FindReplaceDlg::processAll(ProcessOperation op, const FindOption *opt, bool isEntire, FindersInfo *pFindersInfo, int colourStyleID)
 {
 	if (op == ProcessReplaceAll && (*_ppEditView)->getCurrentBuffer()->isReadOnly())
 	{
@@ -2130,7 +2130,7 @@ int FindReplaceDlg::processAll(ProcessOperation op, const FindOption *opt, bool 
 	return nbProcessed;
 }
 
-int FindReplaceDlg::processRange(ProcessOperation op, FindReplaceInfo & findReplaceInfo, const FindersInfo * pFindersInfo, const FindOption *opt, int colourStyleID, ScintillaEditView *view2Process)
+int FindReplaceDlg::processRange(ProcessOperation op, FindReplaceInfo & findReplaceInfo, FindersInfo * pFindersInfo, const FindOption *opt, int colourStyleID, ScintillaEditView *view2Process)
 {
 	int nbProcessed = 0;
 	
@@ -2229,6 +2229,9 @@ int FindReplaceDlg::processRange(ProcessOperation op, FindReplaceInfo & findRepl
 
 	while (targetStart != -1 && targetStart != -2)
 	{
+		if ((op == ProcessFindAll) && pFindersInfo && (pFindersInfo->_totalHitCount >= FIND_MAXHITS))
+			break;
+
 		targetStart = pEditView->searchInTarget(pTextFind, stringSizeFind, findReplaceInfo._startRange, findReplaceInfo._endRange);
 
 		// If we've not found anything, just break out of the loop
@@ -2283,7 +2286,7 @@ int FindReplaceDlg::processRange(ProcessOperation op, FindReplaceInfo & findRepl
 				srm._start = start_mark;
 				srm._end = end_mark;
 				_pFinder->add(FoundInfo(targetStart, targetEnd, lineNumber + 1, pFileName), srm, line.c_str());
-
+				if (pFindersInfo) ++pFindersInfo->_totalHitCount;
 				break; 
 			}
 

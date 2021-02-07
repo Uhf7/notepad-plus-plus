@@ -1812,11 +1812,13 @@ bool Notepad_plus::findInFiles()
 
 			FindersInfo findersInfo;
 			findersInfo._pFileName = fileNames.at(i).c_str();
-
+			findersInfo._totalHitCount = nbTotal;
 			nbTotal += _findReplaceDlg.processAll(ProcessFindAll, FindReplaceDlg::_env, isEntireDoc, &findersInfo);
-
+			assert (nbTotal == findersInfo._totalHitCount);
 			if (closeBuf)
 				MainFileManager.closeBuffer(id, _pEditView);
+			if (findersInfo._totalHitCount >= FIND_MAXHITS)
+				break;
 		}
 		if (i == updateOnCount)
 		{

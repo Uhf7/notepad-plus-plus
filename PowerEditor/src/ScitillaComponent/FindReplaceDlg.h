@@ -39,6 +39,7 @@
 #define FIND_INHIDDENDIR 2
 
 #define FINDREPLACE_MAXLENGTH 2048
+#define FIND_MAXHITS 20000
 
 enum DIALOG_TYPE {FIND_DLG, REPLACE_DLG, FINDINFILES_DLG, MARK_DLG};
 
@@ -209,6 +210,7 @@ struct FindersInfo
 	const TCHAR *_pFileName = nullptr;
 
 	FindOption _findOption;
+	int _totalHitCount = 0;
 };
 
 class FindInFinderDlg : public StaticDialog
@@ -262,8 +264,8 @@ public :
 	int markAllInc(const FindOption *opt);
 	
 
-	int processAll(ProcessOperation op, const FindOption *opt, bool isEntire = false, const FindersInfo *pFindersInfo = nullptr, int colourStyleID = -1);
-	int processRange(ProcessOperation op, FindReplaceInfo & findReplaceInfo, const FindersInfo *pFindersInfo, const FindOption *opt = nullptr, int colourStyleID = -1, ScintillaEditView *view2Process = nullptr);
+	int processAll(ProcessOperation op, const FindOption *opt, bool isEntire = false, FindersInfo *pFindersInfo = nullptr, int colourStyleID = -1);
+	int processRange(ProcessOperation op, FindReplaceInfo & findReplaceInfo, FindersInfo *pFindersInfo, const FindOption *opt = nullptr, int colourStyleID = -1, ScintillaEditView *view2Process = nullptr);
 
 	void replaceAllInOpenedDocs();
 	void findAllIn(InWhat op);
