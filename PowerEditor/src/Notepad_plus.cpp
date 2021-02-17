@@ -1,36 +1,25 @@
 ﻿// This file is part of Notepad++ project
-// Copyright (C)2020 Don HO <don.h@free.fr>
-//
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// Note that the GPL places important restrictions on "derived works", yet
-// it does not provide a detailed definition of that term.  To avoid
-// misunderstandings, we consider an application to constitute a
-// "derivative work" for the purpose of this license if it does any of the
-// following:
-// 1. Integrates source code from Notepad++.
-// 2. Integrates/includes/aggregates Notepad++ into a proprietary executable
-//    installer, such as those produced by InstallShield.
-// 3. Links to a library or executes a program that does any of the above.
+// Copyright (C)2021 Don HO <don.h@free.fr>
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// at your option any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <time.h>
 #include <shlwapi.h>
 #include <wininet.h>
 #include "Notepad_plus.h"
 #include "Notepad_plus_Window.h"
-#include "FileDialog.h"
+#include "CustomFileDialog.h"
 #include "Printer.h"
 #include "FileNameStringSplitter.h"
 #include "lesDlgs.h"
@@ -6061,12 +6050,13 @@ void Notepad_plus::setFindReplaceFolderFilter(const TCHAR *dir, const TCHAR *fil
 
 vector<generic_string> Notepad_plus::addNppComponents(const TCHAR *destDir, const TCHAR *extFilterName, const TCHAR *extFilter)
 {
-	FileDialog fDlg(_pPublicInterface->getHSelf(), _pPublicInterface->getHinst());
-    fDlg.setExtFilter(extFilterName, extFilter, NULL);
+	CustomFileDialog fDlg(_pPublicInterface->getHSelf());
+	fDlg.setExtFilter(extFilterName, extFilter);
 
     vector<generic_string> copiedFiles;
 
-    if (stringVector *pfns = fDlg.doOpenMultiFilesDlg())
+	const auto& fns = fDlg.doOpenMultiFilesDlg();
+    if (!fns.empty())
     {
         // Get plugins dir
 		generic_string destDirName = (NppParameters::getInstance()).getNppPath();
@@ -6079,15 +6069,15 @@ vector<generic_string> Notepad_plus::addNppComponents(const TCHAR *destDir, cons
 
         destDirName += TEXT("\\");
 
-        size_t sz = pfns->size();
+        size_t sz = fns.size();
         for (size_t i = 0 ; i < sz ; ++i)
         {
-            if (::PathFileExists(pfns->at(i).c_str()))
+            if (::PathFileExists(fns.at(i).c_str()))
             {
                 // copy to plugins directory
                 generic_string destName = destDirName;
-                destName += ::PathFindFileName(pfns->at(i).c_str());
-                if (::CopyFile(pfns->at(i).c_str(), destName.c_str(), FALSE))
+                destName += ::PathFindFileName(fns.at(i).c_str());
+                if (::CopyFile(fns.at(i).c_str(), destName.c_str(), FALSE))
                     copiedFiles.push_back(destName.c_str());
             }
         }
@@ -6097,12 +6087,13 @@ vector<generic_string> Notepad_plus::addNppComponents(const TCHAR *destDir, cons
 
 vector<generic_string> Notepad_plus::addNppPlugins(const TCHAR *extFilterName, const TCHAR *extFilter)
 {
-	FileDialog fDlg(_pPublicInterface->getHSelf(), _pPublicInterface->getHinst());
-    fDlg.setExtFilter(extFilterName, extFilter, NULL);
+	CustomFileDialog fDlg(_pPublicInterface->getHSelf());
+    fDlg.setExtFilter(extFilterName, extFilter);
 
     vector<generic_string> copiedFiles;
 
-    if (stringVector *pfns = fDlg.doOpenMultiFilesDlg())
+	const auto& fns = fDlg.doOpenMultiFilesDlg();
+	if (!fns.empty())
     {
         // Get plugins dir
 		generic_string destDirName = (NppParameters::getInstance()).getPluginRootDir();
@@ -6112,15 +6103,15 @@ vector<generic_string> Notepad_plus::addNppPlugins(const TCHAR *extFilterName, c
             ::CreateDirectory(destDirName.c_str(), NULL);
         }
 
-        size_t sz = pfns->size();
+        size_t sz = fns.size();
         for (size_t i = 0 ; i < sz ; ++i)
         {
-            if (::PathFileExists(pfns->at(i).c_str()))
+            if (::PathFileExists(fns.at(i).c_str()))
             {
                 // copy to plugins directory
                 generic_string destName = destDirName;
 				
-				generic_string nameExt = ::PathFindFileName(pfns->at(i).c_str());
+				generic_string nameExt = ::PathFindFileName(fns.at(i).c_str());
 				auto pos = nameExt.find_last_of(TEXT("."));
 				if (pos == generic_string::npos)
 					continue;
@@ -6133,7 +6124,7 @@ vector<generic_string> Notepad_plus::addNppPlugins(const TCHAR *extFilterName, c
 				}
 				PathAppend(destName, nameExt);
 
-                if (::CopyFile(pfns->at(i).c_str(), destName.c_str(), FALSE))
+                if (::CopyFile(fns.at(i).c_str(), destName.c_str(), FALSE))
                     copiedFiles.push_back(destName.c_str());
             }
         }
@@ -6917,7 +6908,7 @@ static const QuoteParams quotes[] =
 	{TEXT("Anonymous #110"), QuoteParams::rapid, true, SC_CP_UTF8, L_TEXT, TEXT("A programmer had a problem, so he decided to use threads.\nNow 2 has. He problems")},
 	{TEXT("Anonymous #111"), QuoteParams::rapid, true, SC_CP_UTF8, L_TEXT, TEXT("I love how the internet has improved people's grammar far more than any English teacher has.\nIf you write \"your\" instead of \"you're\" in English class, all you get is a red mark.\nMess up on the internet, and may God have mercy on your soul.")},
 	{TEXT("Anonymous #112"), QuoteParams::rapid, true, SC_CP_UTF8, L_CSS, TEXT("#hulk {\n    height: 200%;\n    width: 200%;\n    color: green;\n}\n")},
-	//{TEXT("Anonymous #113"), QuoteParams::rapid, false, SC_CP_UTF8, L_TEXT, TEXT("")},
+	{TEXT("Anonymous #113"), QuoteParams::rapid, false, SC_CP_UTF8, L_TEXT, TEXT("A colon can completely change the meaning of a sentence. For example:\n- Jane ate her friend's sandwich.\n- Jane ate her friend's colon.")},
 	{TEXT("Anonymous #114"), QuoteParams::rapid, true, SC_CP_UTF8, L_TEXT, TEXT("How can you face your problem if your problem is your face?")},
 	{TEXT("Anonymous #115"), QuoteParams::slow, false, SC_CP_UTF8, L_TEXT, TEXT("YOLOLO:\nYou Only LOL Once.")},
 	{TEXT("Anonymous #116"), QuoteParams::rapid, true, SC_CP_UTF8, L_TEXT, TEXT("Every exit is an entrance to new experiences.")},
@@ -6969,6 +6960,9 @@ static const QuoteParams quotes[] =
 	{TEXT("Anonymous #162"), QuoteParams::rapid, false, SC_CP_UTF8, L_TEXT, TEXT("Psychologist: Lie down please.\n8: No, thank you.If I do, this session will never reach the end.") },
 	{TEXT("Anonymous #163"), QuoteParams::slow, false, SC_CP_UTF8, L_TEXT, TEXT("I love the way the earth rotates,\nit really makes my day.") },
 	{TEXT("Anonymous #164"), QuoteParams::slow, false, SC_CP_UTF8, L_TEXT, TEXT("Homonyms are a waist of thyme.") },
+	{TEXT("Anonymous #165"), QuoteParams::rapid, false, SC_CP_UTF8, L_TEXT, TEXT("What's the difference between a police officer and a bullet?\nWhen a bullet kills someone else, you know it's been fired.") },
+	{TEXT("Anonymous #166"), QuoteParams::rapid, false, SC_CP_UTF8, L_TEXT, TEXT("What has 4 letters\nsometimes 9 letters\nbut never has 5 letters") },
+	{TEXT("Anonymous #167"), QuoteParams::slow, false, SC_CP_UTF8, L_TEXT, TEXT("The 'h' in \"software development\" stands for \"happiness\".") },
 	{TEXT("A developer"), QuoteParams::slow, false, SC_CP_UTF8, L_TEXT, TEXT("No hugs & kisses.\nOnly bugs & fixes.") },
 	{TEXT("Elon Musk"), QuoteParams::rapid, false, SC_CP_UTF8, L_TEXT, TEXT("Don't set your password as your child's name.\nName your child after your password.") },
 	{TEXT("OOP"), QuoteParams::slow, false, SC_CP_UTF8, L_TEXT, TEXT("If you want to treat women as objects,\ndo it with class.")},

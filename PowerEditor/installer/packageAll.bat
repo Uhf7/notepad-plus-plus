@@ -1,20 +1,19 @@
 echo off
-rem this file is part of installer for Notepad++
-rem Copyright (C)2006 Don HO <don.h@free.fr>
-rem 
-rem This program is free software; you can redistribute it and/or
-rem modify it under the terms of the GNU General Public License
-rem as published by the Free Software Foundation; either
-rem version 2 of the License, or (at your option) any later version.
-rem 
+rem This file is part of Notepad++ project
+rem Copyright (C)2021 Don HO <don.h@free.fr>
+rem
+rem This program is free software: you can redistribute it and/or modify
+rem it under the terms of the GNU General Public License as published by
+rem the Free Software Foundation, either version 3 of the License, or
+rem at your option any later version.
+rem
 rem This program is distributed in the hope that it will be useful,
 rem but WITHOUT ANY WARRANTY; without even the implied warranty of
-rem MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+rem MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 rem GNU General Public License for more details.
-rem 
+rem
 rem You should have received a copy of the GNU General Public License
-rem along with this program; if not, write to the Free Software
-rem Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+rem along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 echo on
 
@@ -70,7 +69,7 @@ rmdir /S /Q .\minimalist
 mkdir .\minimalist
 mkdir .\minimalist\userDefineLangs
 
-copy /Y ..\bin\license.txt .\minimalist\
+copy /Y ..\..\LICENSE .\minimalist\license.txt
 If ErrorLevel 1 goto End
 copy /Y ..\bin\readme.txt .\minimalist\
 If ErrorLevel 1 goto End
@@ -97,7 +96,7 @@ rmdir /S /Q .\minimalist64
 mkdir .\minimalist64
 mkdir .\minimalist64\userDefineLangs
 
-copy /Y ..\bin\license.txt .\minimalist64\
+copy /Y ..\..\LICENSE .\minimalist64\license.txt
 If ErrorLevel 1 goto End
 copy /Y ..\bin\readme.txt .\minimalist64\
 If ErrorLevel 1 goto End
@@ -157,7 +156,7 @@ mkdir .\zipped.package.release64\plugins\Config
 mkdir .\zipped.package.release64\plugins\doc
 
 rem Basic: Copy needed files into Notepad++ 32-bit package folders
-copy /Y ..\bin\license.txt .\zipped.package.release\
+copy /Y ..\..\LICENSE .\zipped.package.release\license.txt
 If ErrorLevel 1 goto End
 copy /Y ..\bin\readme.txt .\zipped.package.release\
 If ErrorLevel 1 goto End
@@ -180,7 +179,7 @@ If ErrorLevel 1 goto End
 
 
 rem Basic Copy needed files into Notepad++ 64-bit package folders
-copy /Y ..\bin\license.txt .\zipped.package.release64\
+copy /Y ..\..\LICENSE .\zipped.package.release64\license.txt
 If ErrorLevel 1 goto End
 copy /Y ..\bin\readme.txt .\zipped.package.release64\
 If ErrorLevel 1 goto End
