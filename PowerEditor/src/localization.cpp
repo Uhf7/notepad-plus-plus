@@ -238,22 +238,22 @@ generic_string NativeLangSpeaker::getShortcutNameString(int itemID) const
 
 generic_string NativeLangSpeaker::getLocalizedStrFromID(const char *strID, const generic_string& defaultString) const
 {
-	if (not _nativeLangA)
+	if (!_nativeLangA)
 		return defaultString;
 
-	if (not strID)
+	if (!strID)
 		return defaultString;
 
 	TiXmlNodeA *node = _nativeLangA->FirstChild("MiscStrings");
-	if (not node) return defaultString;
+	if (!node) return defaultString;
 
 	node = node->FirstChild(strID);
-	if (not node) return defaultString;
+	if (!node) return defaultString;
 
 	TiXmlElementA *element = node->ToElement();
 
 	const char *value = element->Attribute("value");
-	if (not value) return defaultString;
+	if (!value) return defaultString;
 
 	WcharMbcsConvertor& wmc = WcharMbcsConvertor::getInstance();
 	return wmc.char2wchar(value, _nativeLangEncoding);
@@ -751,7 +751,8 @@ void NativeLangSpeaker::changeFindReplaceDlgLang(FindReplaceDlg & findReplaceDlg
 				const char *titre1 = (dlgNode->ToElement())->Attribute("titleFind");
 				const char *titre2 = (dlgNode->ToElement())->Attribute("titleReplace");
 				const char *titre3 = (dlgNode->ToElement())->Attribute("titleFindInFiles");
-				const char *titre4 = (dlgNode->ToElement())->Attribute("titleMark");
+				const char *titre4 = (dlgNode->ToElement())->Attribute("titleFindInProjects");
+				const char *titre5 = (dlgNode->ToElement())->Attribute("titleMark");
 
 				WcharMbcsConvertor& wmc = WcharMbcsConvertor::getInstance();
 
@@ -776,6 +777,12 @@ void NativeLangSpeaker::changeFindReplaceDlgLang(FindReplaceDlg & findReplaceDlg
 				if (titre4 && titre4[0])
 				{
 					basic_string<wchar_t> nameW = wmc.char2wchar(titre4, _nativeLangEncoding);
+					nppParam.getFindDlgTabTitiles()._findInProjects = nameW;
+					findReplaceDlg.changeTabName(FINDINPROJECTS_DLG, nppParam.getFindDlgTabTitiles()._findInProjects.c_str());
+				}
+				if (titre5 && titre5[0])
+				{
+					basic_string<wchar_t> nameW = wmc.char2wchar(titre5, _nativeLangEncoding);
 					nppParam.getFindDlgTabTitiles()._mark = nameW;
 					findReplaceDlg.changeTabName(MARK_DLG, nppParam.getFindDlgTabTitiles()._mark.c_str());
 				}

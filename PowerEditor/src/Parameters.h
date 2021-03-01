@@ -838,6 +838,7 @@ struct NppGUI final
 	bool _monospacedFontFindDlg = false;
 	bool _findDlgAlwaysVisible = false;
 	bool _confirmReplaceInAllOpenDocs = true;
+	bool _muteSounds = false;
 	writeTechnologyEngine _writeTechnologyEngine = defaultTechnology;
 	bool _isWordCharDefault = true;
 	std::string _customWordChars;
@@ -1577,6 +1578,7 @@ public:
 		generic_string _find;
 		generic_string _replace;
 		generic_string _findInFiles;
+		generic_string _findInProjects;
 		generic_string _mark;
 	};
 

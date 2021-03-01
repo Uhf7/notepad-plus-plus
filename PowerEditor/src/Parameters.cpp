@@ -709,7 +709,7 @@ bool LocalizationSwitcher::addLanguageFromXml(const std::wstring& xmlFullPath)
 {
 	wchar_t * fn = ::PathFindFileNameW(xmlFullPath.c_str());
 	wstring foundLang = getLangFromXmlFileName(fn);
-	if (not foundLang.empty())
+	if (!foundLang.empty())
 	{
 		_localizationList.push_back(pair<wstring, wstring>(foundLang, xmlFullPath));
 		return true;
@@ -1311,7 +1311,7 @@ bool NppParameters::load()
 	// LocalizationSwitcher should use always user path
 	_localizationSwitcher._nativeLangPath = nativeLangPath;
 
-	if (not _startWithLocFileName.empty()) // localization argument detected, use user wished localization
+	if (!_startWithLocFileName.empty()) // localization argument detected, use user wished localization
 	{
 		// overwrite nativeLangPath variable
 		nativeLangPath = _nppPath;
@@ -1681,7 +1681,7 @@ bool NppParameters::getUserParametersFromXmlTree()
 		return false;
 
 	TiXmlNode *root = _pXmlUserDoc->FirstChild(TEXT("NotepadPlus"));
-	if (not root)
+	if (!root)
 		return false;
 
 	// Get GUI parameters
@@ -1980,7 +1980,7 @@ bool NppParameters::getContextMenuFromXmlTree(HMENU mainMenuHadle, HMENU plugins
 				menuEntryName = menuEntryNameA?wmc.char2wchar(menuEntryNameA, SC_CP_UTF8):TEXT("");
 				menuItemName = menuItemNameA?wmc.char2wchar(menuItemNameA, SC_CP_UTF8):TEXT("");
 
-				if (not menuEntryName.empty() and not menuItemName.empty())
+				if (!menuEntryName.empty() && !menuItemName.empty())
 				{
 					int cmd = getCmdIdFromMenuEntryItemName(mainMenuHadle, menuEntryName, menuItemName);
 					if (cmd != -1)
@@ -1997,7 +1997,7 @@ bool NppParameters::getContextMenuFromXmlTree(HMENU mainMenuHadle, HMENU plugins
 					pluginCmdName = pluginCmdNameA?wmc.char2wchar(pluginCmdNameA, SC_CP_UTF8):TEXT("");
 
 					// if plugin menu existing plls the value of PluginEntryName and PluginCommandItemName are valid
-					if (pluginsMenu && not pluginName.empty() && not pluginCmdName.empty())
+					if (pluginsMenu && !pluginName.empty() && !pluginCmdName.empty())
 					{
 						int pluginCmdId = getPluginCmdIdFromMenuEntryItemName(pluginsMenu, pluginName, pluginCmdName);
 						if (pluginCmdId != -1)
@@ -3259,9 +3259,9 @@ void NppParameters::writeSession(const Session & session, const TCHAR *fileName)
 
 void NppParameters::writeShortcuts()
 {
-	if (not _isAnyShortcutModified) return;
+	if (!_isAnyShortcutModified) return;
 
-	if (not _pXmlShortcutDoc)
+	if (!_pXmlShortcutDoc)
 	{
 		//do the treatment
 		_pXmlShortcutDoc = new TiXmlDocument(_shortcutsPath);
@@ -3701,16 +3701,16 @@ void StyleArray::addStyler(int styleID, TiXmlNode *styleNode)
 
 bool NppParameters::writeRecentFileHistorySettings(int nbMaxFile) const
 {
-	if (not _pXmlUserDoc) return false;
+	if (!_pXmlUserDoc) return false;
 
 	TiXmlNode *nppRoot = _pXmlUserDoc->FirstChild(TEXT("NotepadPlus"));
-	if (not nppRoot)
+	if (!nppRoot)
 	{
 		nppRoot = _pXmlUserDoc->InsertEndChild(TiXmlElement(TEXT("NotepadPlus")));
 	}
 
 	TiXmlNode *historyNode = nppRoot->FirstChildElement(TEXT("History"));
-	if (not historyNode)
+	if (!historyNode)
 	{
 		historyNode = nppRoot->InsertEndChild(TiXmlElement(TEXT("History")));
 	}
@@ -3726,7 +3726,7 @@ bool NppParameters::writeProjectPanelsSettings() const
 	if (!_pXmlUserDoc) return false;
 
 	TiXmlNode *nppRoot = _pXmlUserDoc->FirstChild(TEXT("NotepadPlus"));
-	if (not nppRoot)
+	if (!nppRoot)
 	{
 		nppRoot = _pXmlUserDoc->InsertEndChild(TiXmlElement(TEXT("NotepadPlus")));
 	}
@@ -3761,7 +3761,7 @@ bool NppParameters::writeFileBrowserSettings(const vector<generic_string> & root
 	if (!_pXmlUserDoc) return false;
 
 	TiXmlNode *nppRoot = _pXmlUserDoc->FirstChild(TEXT("NotepadPlus"));
-	if (not nppRoot)
+	if (!nppRoot)
 	{
 		nppRoot = _pXmlUserDoc->InsertEndChild(TiXmlElement(TEXT("NotepadPlus")));
 	}
@@ -3799,13 +3799,13 @@ bool NppParameters::writeFileBrowserSettings(const vector<generic_string> & root
 bool NppParameters::writeHistory(const TCHAR *fullpath)
 {
 	TiXmlNode *nppRoot = _pXmlUserDoc->FirstChild(TEXT("NotepadPlus"));
-	if (not nppRoot)
+	if (!nppRoot)
 	{
 		nppRoot = _pXmlUserDoc->InsertEndChild(TiXmlElement(TEXT("NotepadPlus")));
 	}
 
 	TiXmlNode *historyNode = nppRoot->FirstChildElement(TEXT("History"));
-	if (not historyNode)
+	if (!historyNode)
 	{
 		historyNode = nppRoot->InsertEndChild(TiXmlElement(TEXT("History")));
 	}
@@ -5292,6 +5292,10 @@ void NppParameters::feedGUIParameters(TiXmlNode *node)
 			const TCHAR* saveDlgExtFilterToAllTypes = element->Attribute(TEXT("saveDlgExtFilterToAllTypes"));
 			if (saveDlgExtFilterToAllTypes)
 				_nppGUI._setSaveDlgExtFiltToAllTypes = (lstrcmp(saveDlgExtFilterToAllTypes, TEXT("yes")) == 0);
+
+			const TCHAR * optMuteSounds = element->Attribute(TEXT("muteSounds"));
+			if (optMuteSounds)
+				_nppGUI._muteSounds = lstrcmp(optMuteSounds, TEXT("yes")) == 0;
 		}
 		else if (!lstrcmp(nm, TEXT("commandLineInterpreter")))
 		{
@@ -5712,19 +5716,19 @@ bool NppParameters::writeScintillaParams()
 
 	const TCHAR *pViewName = TEXT("ScintillaPrimaryView");
 	TiXmlNode *nppRoot = _pXmlUserDoc->FirstChild(TEXT("NotepadPlus"));
-	if (not nppRoot)
+	if (!nppRoot)
 	{
 		nppRoot = _pXmlUserDoc->InsertEndChild(TiXmlElement(TEXT("NotepadPlus")));
 	}
 
 	TiXmlNode *configsRoot = nppRoot->FirstChildElement(TEXT("GUIConfigs"));
-	if (not configsRoot)
+	if (!configsRoot)
 	{
 		configsRoot = nppRoot->InsertEndChild(TiXmlElement(TEXT("GUIConfigs")));
 	}
 
 	TiXmlNode *scintNode = getChildElementByAttribut(configsRoot, TEXT("GUIConfig"), TEXT("name"), pViewName);
-	if (not scintNode)
+	if (!scintNode)
 	{
 		scintNode = configsRoot->InsertEndChild(TiXmlElement(TEXT("GUIConfig")));
 		(scintNode->ToElement())->SetAttribute(TEXT("name"), pViewName);
@@ -6225,6 +6229,7 @@ void NppParameters::createXmlTreeFromGUIParams()
 		GUIConfigElement->SetAttribute(TEXT("docPeekOnTab"), _nppGUI._isDocPeekOnTab ? TEXT("yes") : TEXT("no"));
 		GUIConfigElement->SetAttribute(TEXT("docPeekOnMap"), _nppGUI._isDocPeekOnMap ? TEXT("yes") : TEXT("no"));
 		GUIConfigElement->SetAttribute(TEXT("saveDlgExtFilterToAllTypes"), _nppGUI._setSaveDlgExtFiltToAllTypes ? TEXT("yes") : TEXT("no"));
+		GUIConfigElement->SetAttribute(TEXT("muteSounds"), _nppGUI._muteSounds ? TEXT("yes") : TEXT("no"));
 	}
 
 	// <GUIConfig name="Searching" "monospacedFontFindDlg"="no" stopFillingFindField="no" findDlgAlwaysVisible="no" confirmReplaceOpenDocs="yes" confirmMacroReplaceOpenDocs="yes" confirmReplaceInFiles="yes" confirmMacroReplaceInFiles="yes" />
@@ -6281,10 +6286,10 @@ void NppParameters::createXmlTreeFromGUIParams()
 
 bool NppParameters::writeFindHistory()
 {
-	if (not _pXmlUserDoc) return false;
+	if (!_pXmlUserDoc) return false;
 
 	TiXmlNode *nppRoot = _pXmlUserDoc->FirstChild(TEXT("NotepadPlus"));
-	if (not nppRoot)
+	if (!nppRoot)
 	{
 		nppRoot = _pXmlUserDoc->InsertEndChild(TiXmlElement(TEXT("NotepadPlus")));
 	}

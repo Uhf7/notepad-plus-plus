@@ -217,6 +217,11 @@ LRESULT Notepad_plus::process(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 			return findInFiles();
 		}
 
+		case WM_FINDINPROJECTS:
+		{
+			return findInProjects();
+		}
+
 		case WM_FINDALL_INCURRENTFINDER:
 		{
 			FindersInfo *findInFolderInfo = reinterpret_cast<FindersInfo *>(wParam);
@@ -233,13 +238,19 @@ LRESULT Notepad_plus::process(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 			return TRUE;
 		}
 
+		case WM_REPLACEINPROJECTS:
+		{
+			replaceInProjects();
+			return TRUE;
+		}
+
 		case NPPM_LAUNCHFINDINFILESDLG:
 		{
 			// Find in files function code should be here due to the number of parameters (2) cannot be passed via WM_COMMAND
 			const int strSize = FINDREPLACE_MAXLENGTH;
 			TCHAR str[strSize];
 
-			bool isFirstTime = not _findReplaceDlg.isCreated();
+			bool isFirstTime = !_findReplaceDlg.isCreated();
 			_findReplaceDlg.doDialog(FIND_DLG, _nativeLangSpeaker.isRTL());
 			
 			const NppGUI & nppGui = nppParam.getNppGUI();
@@ -257,7 +268,7 @@ LRESULT Notepad_plus::process(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 			return TRUE;
 		}
 
-		case NPPM_LAUNCHFINDINWORKSPACEDLG:
+		case NPPM_INTERNAL_FINDINPROJECTS:
 		{
 			const int strSize = FINDREPLACE_MAXLENGTH;
 			TCHAR str[strSize];
@@ -269,7 +280,7 @@ LRESULT Notepad_plus::process(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 			_findReplaceDlg.setSearchText(str);
 			if (isFirstTime)
 				_nativeLangSpeaker.changeDlgLang(_findReplaceDlg.getHSelf(), "Find");
-			_findReplaceDlg.launchFindInFilesDlg();
+			_findReplaceDlg.launchFindInProjectsDlg();
 			_findReplaceDlg.setFindInFilesDirFilter(L"", L"*.*");
 			_findReplaceDlg.setProjectCheckmarks(NULL, (int) wParam);
 			return TRUE;
@@ -281,7 +292,7 @@ LRESULT Notepad_plus::process(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 			TCHAR str[strSize];
 			Finder *launcher = reinterpret_cast<Finder *>(wParam);
 
-			bool isFirstTime = not _findInFinderDlg.isCreated();
+			bool isFirstTime = !_findInFinderDlg.isCreated();
 
 			_findInFinderDlg.doDialog(launcher, _nativeLangSpeaker.isRTL());
 
@@ -1378,7 +1389,7 @@ LRESULT Notepad_plus::process(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 
 		case NPPM_INTERNAL_FINDKEYCONFLICTS:
 		{
-			if (not wParam || not lParam) // Clean up current session
+			if (!wParam || !lParam) // Clean up current session
 			{
 				delete _pShortcutMapper;
 				_pShortcutMapper = nullptr;

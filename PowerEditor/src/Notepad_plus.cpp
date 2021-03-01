@@ -271,8 +271,8 @@ LRESULT Notepad_plus::init(HWND hwnd)
 	_mainEditView.execute(SCI_SETCARETLINEVISIBLE, svp1._currentLineHilitingShow);
 	_subEditView.execute(SCI_SETCARETLINEVISIBLE, svp1._currentLineHilitingShow);
 
-	_mainEditView.execute(SCI_SETENDATLASTLINE, not svp1._scrollBeyondLastLine);
-	_subEditView.execute(SCI_SETENDATLASTLINE, not svp1._scrollBeyondLastLine);
+	_mainEditView.execute(SCI_SETENDATLASTLINE, !svp1._scrollBeyondLastLine);
+	_subEditView.execute(SCI_SETENDATLASTLINE, !svp1._scrollBeyondLastLine);
 
 	if (svp1._doSmoothFont)
 	{
@@ -1513,42 +1513,79 @@ void Notepad_plus::getMatchedFileNames(const TCHAR *dir, const vector<generic_st
 	::FindClose(hFile);
 }
 
-std::mutex replaceInFiles_mutex;
-
-bool Notepad_plus::replaceInFiles()
+bool Notepad_plus::createFilelistForFiles(vector<generic_string> & fileNames)
 {
-	std::lock_guard<std::mutex> lock(replaceInFiles_mutex);
-
 	const TCHAR *dir2Search = _findReplaceDlg.getDir2Search();
 	if (!dir2Search[0] || !::PathFileExists(dir2Search))
 	{
 		return false;
 	}
 
+	vector<generic_string> patterns2Match;
+	_findReplaceDlg.getAndValidatePatterns(patterns2Match);
+
 	bool isRecursive = _findReplaceDlg.isRecursive();
 	bool isInHiddenDir = _findReplaceDlg.isInHiddenDir();
+	getMatchedFileNames(dir2Search, patterns2Match, fileNames, isRecursive, isInHiddenDir);
+	return true;
+}
+
+bool Notepad_plus::createFilelistForProjects(vector<generic_string> & fileNames)
+{
+	vector<generic_string> patterns2Match;
+	_findReplaceDlg.getAndValidatePatterns(patterns2Match);
+	bool somethingIsSelected = false; // at least one Project Panel is open and checked
+
+	if (_findReplaceDlg.isProjectPanel_1() && _pProjectPanel_1 && !_pProjectPanel_1->isClosed())
+	{
+		_pProjectPanel_1->enumWorkSpaceFiles (NULL, patterns2Match, fileNames);
+		somethingIsSelected = true;
+	}
+	if (_findReplaceDlg.isProjectPanel_2() && _pProjectPanel_2 && !_pProjectPanel_2->isClosed())
+	{
+		_pProjectPanel_2->enumWorkSpaceFiles (NULL, patterns2Match, fileNames);
+		somethingIsSelected = true;
+	}
+	if (_findReplaceDlg.isProjectPanel_3() && _pProjectPanel_3 && !_pProjectPanel_3->isClosed())
+	{
+		_pProjectPanel_3->enumWorkSpaceFiles (NULL, patterns2Match, fileNames);
+		somethingIsSelected = true;
+	}
+	return somethingIsSelected;
+}
+
+std::mutex replaceInFiles_mutex;
+
+bool Notepad_plus::replaceInFiles()
+{
+	std::lock_guard<std::mutex> lock(replaceInFiles_mutex);
+
+	std::vector<generic_string> fileNames;
+	if (!createFilelistForFiles(fileNames))
+		return false;
+
+	return replaceInFilelist(fileNames);
+}
+
+bool Notepad_plus::replaceInProjects()
+{
+	std::lock_guard<std::mutex> lock(replaceInFiles_mutex);
+
+	std::vector<generic_string> fileNames;
+	if (!createFilelistForProjects(fileNames))
+		return false;
+
+	return replaceInFilelist(fileNames);
+}
+
+bool Notepad_plus::replaceInFilelist(std::vector<generic_string> & fileNames)
+{
 	int nbTotal = 0;
 
 	ScintillaEditView *pOldView = _pEditView;
 	_pEditView = &_invisibleEditView;
 	Document oldDoc = _invisibleEditView.execute(SCI_GETDOCPOINTER);
 	Buffer * oldBuf = _invisibleEditView.getCurrentBuffer();	//for manually setting the buffer, so notifications can be handled properly
-
-	vector<generic_string> patterns2Match;
-	_findReplaceDlg.getPatterns(patterns2Match);
-	if (patterns2Match.size() == 0)
-	{
-		_findReplaceDlg.setFindInFilesDirFilter(NULL, TEXT("*.*"));
-		_findReplaceDlg.getPatterns(patterns2Match);
-	}
-	else if (allPatternsAreExclusion(patterns2Match))
-	{
-		patterns2Match.insert(patterns2Match.begin(), TEXT("*.*"));
-	}
-
-	vector<generic_string> fileNames;
-
-	getMatchedFileNames(dir2Search, patterns2Match, fileNames, isRecursive, isInHiddenDir);
 
 	Progress progress(_pPublicInterface->getHinst());
 	size_t filesCount = fileNames.size();
@@ -1706,56 +1743,24 @@ bool Notepad_plus::findInFinderFiles(FindersInfo *findInFolderInfo)
 
 bool Notepad_plus::findInFiles()
 {
-	const TCHAR *dir2Search = _findReplaceDlg.getDir2Search();
-
-	vector<generic_string> fileNames;
-	vector<generic_string> patterns2Match;
-
-	_findReplaceDlg.getPatterns(patterns2Match);
-	if (patterns2Match.size() == 0)
-	{
-		_findReplaceDlg.setFindInFilesDirFilter(NULL, TEXT("*.*"));
-		_findReplaceDlg.getPatterns(patterns2Match);
-	}
-	else if (allPatternsAreExclusion(patterns2Match))
-	{
-		patterns2Match.insert(patterns2Match.begin(), TEXT("*.*"));
-	}
-
-	if (not dir2Search[0])
-	{ // search workspace files
-		if (_findReplaceDlg.isProjectPanel_1() && _pProjectPanel_1)
-		{
-			_pProjectPanel_1->enumWorkSpaceFiles (NULL, patterns2Match, fileNames);
-		}
-		if (_findReplaceDlg.isProjectPanel_2() && _pProjectPanel_2)
-		{
-			_pProjectPanel_2->enumWorkSpaceFiles (NULL, patterns2Match, fileNames);
-		}
-		if (_findReplaceDlg.isProjectPanel_3() && _pProjectPanel_3)
-		{
-			_pProjectPanel_3->enumWorkSpaceFiles (NULL, patterns2Match, fileNames);
-		}
-		if (fileNames.size() == 0) return false;
-	}
-	else if (not ::PathFileExists(dir2Search))
-	{
+	std::vector<generic_string> fileNames;
+	if (! createFilelistForFiles(fileNames))
 		return false;
-	}
-	else
-	{
-		bool isRecursive = _findReplaceDlg.isRecursive();
-		bool isInHiddenDir = _findReplaceDlg.isInHiddenDir();
-		vector<generic_string> patterns2Match;
-		_findReplaceDlg.getPatterns(patterns2Match);
-		if (patterns2Match.size() == 0)
-		{
-			_findReplaceDlg.setFindInFilesDirFilter(NULL, TEXT("*.*"));
-			_findReplaceDlg.getPatterns(patterns2Match);
-		}
-		getMatchedFileNames(dir2Search, patterns2Match, fileNames, isRecursive, isInHiddenDir);
-	}
 
+	return findInFilelist(fileNames);
+}
+
+bool Notepad_plus::findInProjects()
+{
+	vector<generic_string> fileNames;
+	if (! createFilelistForProjects(fileNames))
+		return false;
+
+	return findInFilelist(fileNames);
+}
+
+bool Notepad_plus::findInFilelist(std::vector<generic_string> & fileNames)
+{
 	int nbTotal = 0;
 	ScintillaEditView *pOldView = _pEditView;
 	_pEditView = &_invisibleEditView;
@@ -2126,7 +2131,7 @@ void Notepad_plus::checkDocState()
 	bool isSysReadOnly = curBuf->getFileReadOnly();
 	enableCommand(IDM_EDIT_CLEARREADONLY, isSysReadOnly, MENU);
 
-	bool doEnable = not (curBuf->isMonitoringOn() || isSysReadOnly);
+	bool doEnable = !(curBuf->isMonitoringOn() || isSysReadOnly);
 	enableCommand(IDM_EDIT_SETREADONLY, doEnable, MENU);
 
 	bool isUserReadOnly = curBuf->getUserReadOnly();
@@ -2152,7 +2157,7 @@ void Notepad_plus::checkDocState()
 	if (_pAnsiCharPanel)
 		_pAnsiCharPanel->switchEncoding();
 
-	enableCommand(IDM_VIEW_MONITORING, not curBuf->isUntitled(), MENU | TOOLBAR);
+	enableCommand(IDM_VIEW_MONITORING, !curBuf->isUntitled(), MENU | TOOLBAR);
 	checkMenuItem(IDM_VIEW_MONITORING, curBuf->isMonitoringOn());
 	_toolBar.setCheck(IDM_VIEW_MONITORING, curBuf->isMonitoringOn());
 }
@@ -3052,7 +3057,7 @@ void Notepad_plus::maintainIndentation(TCHAR ch)
 		return;
 
 	if (type == L_C || type == L_CPP || type == L_JAVA || type == L_CS || type == L_OBJC ||
-		type == L_PHP || type == L_JS || type == L_JAVASCRIPT || type == L_JSP || type == L_CSS || type == L_PERL || type == L_RUST || type == L_POWERSHELL)
+		type == L_PHP || type == L_JS || type == L_JAVASCRIPT || type == L_JSP || type == L_CSS || type == L_PERL || type == L_RUST || type == L_POWERSHELL || type == L_JSON)
 	{
 		if (((eolMode == SC_EOL_CRLF || eolMode == SC_EOL_LF) && ch == '\n') ||
 			(eolMode == SC_EOL_CR && ch == '\r'))
@@ -3095,7 +3100,7 @@ void Notepad_plus::maintainIndentation(TCHAR ch)
 				_pEditView->setLineIndent(curLine, indentAmountPrevLine);
 			}
 			// These languages do no support single line control structures without braces.
-			else if (type == L_PERL || type == L_RUST || type == L_POWERSHELL)
+			else if (type == L_PERL || type == L_RUST || type == L_POWERSHELL || type == L_JSON)
 			{
 				_pEditView->setLineIndent(curLine, indentAmountPrevLine);
 			}
@@ -3209,14 +3214,14 @@ void Notepad_plus::maintainIndentation(TCHAR ch)
 
 BOOL Notepad_plus::processFindAccel(MSG *msg) const
 {
-	if (not ::IsChild(_findReplaceDlg.getHSelf(), ::GetFocus()))
+	if (!::IsChild(_findReplaceDlg.getHSelf(), ::GetFocus()))
 		return FALSE;
 	return ::TranslateAccelerator(_findReplaceDlg.getHSelf(), _accelerator.getFindAccTable(), msg);
 }
 
 BOOL Notepad_plus::processIncrFindAccel(MSG *msg) const
 {
-	if (not ::IsChild(_incrementFindDlg.getHSelf(), ::GetFocus()))
+	if (!::IsChild(_incrementFindDlg.getHSelf(), ::GetFocus()))
 		return FALSE;
 	return ::TranslateAccelerator(_incrementFindDlg.getHSelf(), _accelerator.getIncrFindAccTable(), msg);
 }
@@ -3814,7 +3819,7 @@ void Notepad_plus::dropFiles(HDROP hdrop)
 				switchToFile(lastOpened);
 			}
 		}
-		else if (not isOldMode && (folderPaths.size() != 0 && filePaths.size() != 0)) // new mode && both folders & files
+		else if (!isOldMode && (folderPaths.size() != 0 && filePaths.size() != 0)) // new mode && both folders & files
 		{
 			// display error & do nothing
 			_nativeLangSpeaker.messageBox("DroppingFolderAsProjectModeWarning",
@@ -3823,7 +3828,7 @@ void Notepad_plus::dropFiles(HDROP hdrop)
 				TEXT("Invalid action"),
 				MB_OK | MB_APPLMODAL);
 		}
-		else if (not isOldMode && (folderPaths.size() != 0 && filePaths.size() == 0)) // new mode && only folders
+		else if (!isOldMode && (folderPaths.size() != 0 && filePaths.size() == 0)) // new mode && only folders
 		{
 			// process new mode
 			generic_string emptyStr;
@@ -4655,7 +4660,7 @@ bool Notepad_plus::doBlockComment(comment_mode currCommentMode)
 	const TCHAR aSpace[] { TEXT(" ") };
 
 	//Only values that have passed through will be assigned, to be sure they are valid!
-	if (not isSingleLineAdvancedMode)
+	if (!isSingleLineAdvancedMode)
 	{
 		comment = commentLineSymbol;
 
@@ -4718,7 +4723,7 @@ bool Notepad_plus::doBlockComment(comment_mode currCommentMode)
 
    		if (currCommentMode != cm_comment) // uncomment/toggle
 		{
-			if (not isSingleLineAdvancedMode)
+			if (!isSingleLineAdvancedMode)
 			{
 				// In order to do get case insensitive comparison use strnicmp() instead case-sensitive comparison.
 				//      Case insensitive comparison is needed e.g. for "REM" and "rem" in Batchfiles.
@@ -4806,7 +4811,7 @@ bool Notepad_plus::doBlockComment(comment_mode currCommentMode)
 
 		if (currCommentMode != cm_uncomment) // comment/toggle
 		{
-			if (not isSingleLineAdvancedMode)
+			if (!isSingleLineAdvancedMode)
 			{
 				_pEditView->insertGenericTextFrom(lineIndent, comment.c_str());
 

@@ -369,7 +369,11 @@ private:
 		// Update the edit box text.
 		// It will update the address if the path is a directory.
 		if (nameChanged)
-			sendDialogFileName(fileName.c_str());
+		{
+			// Clear the name first to ensure it's updated properly.
+			_dialog->SetFileName(_T(""));
+			_dialog->SetFileName(fileName.c_str());
+		}
 	}
 
 	// Transforms a forward-slash path to a canonical Windows path.
@@ -378,27 +382,28 @@ private:
 		if (fileName.empty())
 			return false;
 		bool transformed = false;
-		// Transform to a Windows path.
-		size_t pos = 0;
-		while ((pos = fileName.find('/', pos)) != generic_string::npos)
-		{
-			fileName[pos] = '\\';
-			++pos;
-			transformed = true;
-		}
+		// Replace a forward-slash with a backslash.
+		std::replace_if(fileName.begin(), fileName.end(),
+			[&transformed](generic_string::value_type c)
+			{
+				const bool eq = (c == '/');
+				transformed |= eq;
+				return eq;
+			},
+			'\\');
 		// If there are two or more double backslash, then change it to single.
-		while (fileName.find(_T("\\\\")) != generic_string::npos)
+		// Start from 2nd element to keep a path that starts from "\\".
+		auto last = std::unique(fileName.begin() + 1, fileName.end(),
+			[](generic_string::value_type a, generic_string::value_type b)
+			{
+				return a == b && a == '\\';
+			});
+		if (last != fileName.end())
 		{
-			fileName.replace(fileName.find(_T("\\\\")), 2, _T("\\"));
+			fileName.erase(last, fileName.end());
 			transformed = true;
 		}
 		return transformed;
-	}
-
-	// Sets the file name and waits until it is processed by the edit control.
-	void sendDialogFileName(const TCHAR* name)
-	{
-		::SendMessage(_hwndNameEdit, WM_SETTEXT, 0, reinterpret_cast<LPARAM>(name));
 	}
 
 	// Enumerates the child windows of a dialog.
@@ -435,7 +440,23 @@ private:
 
 	static LRESULT CALLBACK OkButtonWndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 	{
-		if (msg == WM_LBUTTONDOWN)
+		// The ways to press a button:
+		// 1. space/enter is pressed when the button has focus (WM_KEYDOWN)
+		// 2. left mouse click on a button (WM_LBUTTONDOWN)
+		// 3. Alt + S
+		bool pressed = false;
+		switch (msg)
+		{
+		case BM_SETSTATE:
+			// Sent after all press events above except when press return while focused.
+			pressed = (wparam == TRUE);
+			break;
+		case WM_GETDLGCODE:
+			// Sent for the keyboard input.
+			pressed = (wparam == VK_RETURN);
+			break;
+		}
+		if (pressed)
 			_staticThis->onPreFileOk();
 		return CallWindowProc(_okButtonProc, hwnd, msg, wparam, lparam);
 	}
@@ -514,8 +535,16 @@ public:
 		if (SUCCEEDED(hr) && _title)
 			hr = _dialog->SetTitle(_title);
 
-		if (SUCCEEDED(hr) && _folder)
-			hr = setFolder(_folder) ? S_OK : E_FAIL;
+		if (SUCCEEDED(hr))
+		{
+			// Do not fail the initialization if failed to set a folder.
+			bool isFolderSet = false;
+			if (!_initialFolder.empty())
+				isFolderSet = setDialogFolder(_dialog, _initialFolder.c_str());
+
+			if (!isFolderSet && !_fallbackFolder.empty())
+				isFolderSet = setDialogFolder(_dialog, _fallbackFolder.c_str());
+		}
 
 		if (SUCCEEDED(hr) && _defExt && _defExt[0] != '\0')
 			hr = _dialog->SetDefaultExtension(_defExt);
@@ -591,11 +620,6 @@ public:
 			}
 		}
 		return true;
-	}
-
-	bool setFolder(const TCHAR* dir)
-	{
-		return setDialogFolder(_dialog, dir);
 	}
 
 	bool show()
@@ -687,7 +711,8 @@ public:
 	HWND _hwndOwner = nullptr;
 	const TCHAR* _title = nullptr;
 	const TCHAR* _defExt = nullptr;
-	const TCHAR* _folder = nullptr;
+	generic_string _initialFolder;
+	generic_string _fallbackFolder;
 	const TCHAR* _checkboxLabel = nullptr;
 	const TCHAR* _initialFileName = nullptr;
 	bool _isCheckboxActive = true;
@@ -706,6 +731,11 @@ private:
 CustomFileDialog::CustomFileDialog(HWND hwnd) : _impl{std::make_unique<Impl>()}
 {
 	_impl->_hwndOwner = hwnd;
+
+	NppParameters& params = NppParameters::getInstance();
+	const TCHAR* workDir = params.getWorkingDir();
+	if (workDir)
+		_impl->_fallbackFolder = workDir;
 }
 
 CustomFileDialog::~CustomFileDialog() = default;
@@ -734,7 +764,6 @@ void CustomFileDialog::setExtFilter(const TCHAR *extText, const TCHAR *exts)
 	_impl->_filterSpec.push_back({ extText, newExts });
 }
 
-
 void CustomFileDialog::setExtFilter(const TCHAR *extText, std::initializer_list<const TCHAR*> extList)
 {
 	generic_string exts;
@@ -759,7 +788,7 @@ void CustomFileDialog::setDefFileName(const TCHAR* fn)
 
 void CustomFileDialog::setFolder(const TCHAR* folder)
 {
-	_impl->_folder = folder;
+	_impl->_initialFolder = folder ? folder : _T("");
 }
 
 void CustomFileDialog::setCheckbox(const TCHAR* text, bool isActive)
@@ -790,9 +819,6 @@ generic_string CustomFileDialog::doSaveDlg()
 
 	CurrentDirBackup backup;
 
-	NppParameters& params = NppParameters::getInstance();
-	_impl->setFolder(params.getWorkingDir());
-
 	_impl->addFlags(FOS_PATHMUSTEXIST | FOS_FILEMUSTEXIST | FOS_FORCEFILESYSTEM);
 	bool bOk = _impl->show();
 	return bOk ? _impl->getResultFilename() : _T("");
@@ -805,9 +831,6 @@ generic_string CustomFileDialog::doOpenSingleFileDlg()
 
 	CurrentDirBackup backup;
 
-	NppParameters& params = NppParameters::getInstance();
-	_impl->setFolder(params.getWorkingDir());
-
 	_impl->addFlags(FOS_PATHMUSTEXIST | FOS_FILEMUSTEXIST | FOS_FORCEFILESYSTEM);
 	bool bOk = _impl->show();
 	return bOk ? _impl->getResultFilename() : _T("");
@@ -819,9 +842,6 @@ std::vector<generic_string> CustomFileDialog::doOpenMultiFilesDlg()
 		return {};
 
 	CurrentDirBackup backup;
-
-	NppParameters& params = NppParameters::getInstance();
-	_impl->setFolder(params.getWorkingDir());
 
 	_impl->addFlags(FOS_PATHMUSTEXIST | FOS_FILEMUSTEXIST | FOS_FORCEFILESYSTEM | FOS_ALLOWMULTISELECT);
 	bool bOk = _impl->show();
