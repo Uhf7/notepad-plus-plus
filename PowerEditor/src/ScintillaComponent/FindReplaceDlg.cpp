@@ -1695,8 +1695,8 @@ INT_PTR CALLBACK FindReplaceDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM
 				case IDD_FINDINFILES_FOLDERFOLLOWSDOC_CHECK :
 				{
 					if (_currentStatus == FINDINFILES_DLG)
-					{
 						findHistory._isFolderFollowDoc = isCheckedOrNot(IDD_FINDINFILES_FOLDERFOLLOWSDOC_CHECK);
+					
                     if (findHistory._isFolderFollowDoc)
                     {
                         NppParameters& nppParam = NppParameters::getInstance();
