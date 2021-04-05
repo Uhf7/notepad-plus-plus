@@ -801,6 +801,7 @@ struct NppGUI final
 	bool _tabReplacedBySpace = false;
 
 	bool _finderLinesAreCurrentlyWrapped = false;
+	bool _finderPurgeBeforeEverySearch = false;
 
 	int _fileAutoDetection = cdEnabledNew;
 
@@ -1504,6 +1505,9 @@ public:
 	}
 	const CmdLineParamsDTO & getCmdLineParams() const {return _cmdLineParams;};
 
+	const generic_string& getCmdLineString() const { return _cmdLineString; }
+	void setCmdLineString(const generic_string& str) { _cmdLineString = str; }
+
 	void setFileSaveDlgFilterIndex(int ln) {_fileSaveDlgFilterIndex = ln;};
 	int getFileSaveDlgFilterIndex() const {return _fileSaveDlgFilterIndex;};
 
@@ -1672,6 +1676,16 @@ public:
 		_cmdSettingsDir = settingsDir;
 	};
 
+	void setTitleBarAdd(const generic_string& titleAdd)
+	{
+		_titleBarAdditional = titleAdd;
+	}
+
+	const generic_string& getTitleBarAdd() const
+	{
+		return _titleBarAdditional;
+	}
+
 	DPIManager _dpiManager;
 
 	generic_string static getSpecialFolderLocation(int folderKind);
@@ -1731,6 +1745,7 @@ private:
 	int _nbExternalLang = 0;
 
 	CmdLineParamsDTO _cmdLineParams;
+	generic_string _cmdLineString;
 
 	int _fileSaveDlgFilterIndex = -1;
 
@@ -1750,6 +1765,8 @@ private:
 	bool _isx64 = false; // by default 32-bit
 
 	generic_string _cmdSettingsDir;
+
+	generic_string _titleBarAdditional;
 
 public:
 	void setShortcutDirty() { _isAnyShortcutModified = true; };

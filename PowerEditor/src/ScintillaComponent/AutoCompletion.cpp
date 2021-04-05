@@ -101,7 +101,19 @@ bool AutoCompletion::showApiAndWordComplete()
 	bool canStop = false;
 	for (size_t i = 0, kwlen = _keyWordArray.size(); i < kwlen; ++i)
 	{
-		if (_keyWordArray[i].compare(0, len, beginChars) == 0)
+		int compareResult = 0;
+
+		if (_ignoreCase)
+		{
+			generic_string kwSufix = _keyWordArray[i].substr(0, len);
+			compareResult = generic_stricmp(beginChars, kwSufix.c_str());
+		}
+		else
+		{
+			compareResult = _keyWordArray[i].compare(0, len, beginChars);
+		}
+
+		if (compareResult == 0)
 		{
 			if (!isInList(_keyWordArray[i], wordArray))
 				wordArray.push_back(_keyWordArray[i]);
@@ -155,7 +167,7 @@ void AutoCompletion::getWordArray(vector<generic_string> & wordArray, TCHAR *beg
 	_pEditView->execute(SCI_SETSEARCHFLAGS, flags);
 	int posFind = _pEditView->searchInTarget(expr.c_str(), int(expr.length()), 0, docLength);
 
-	while (posFind != -1 && posFind != -2)
+	while (posFind >= 0)
 	{
 		int wordStart = int(_pEditView->execute(SCI_GETTARGETSTART));
 		int wordEnd = int(_pEditView->execute(SCI_GETTARGETEND));
@@ -432,7 +444,7 @@ void AutoCompletion::getCloseTag(char *closeTag, size_t closeTagSize, size_t car
 
 	int targetStart = _pEditView->searchInTarget(tag2find, lstrlen(tag2find), caretPos, 0);
 
-	if (targetStart == -1 || targetStart == -2)
+	if (targetStart < 0)
 		return;
 
 	int targetEnd = int(_pEditView->execute(SCI_GETTARGETEND));

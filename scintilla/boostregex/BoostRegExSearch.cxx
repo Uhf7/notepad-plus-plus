@@ -12,7 +12,6 @@
 #include <stdlib.h>
 #include <iterator> 
 #include <vector>
-
 #include "Scintilla.h"
 #include "Platform.h"
 #include "ILoader.h"
@@ -251,6 +250,8 @@ RegexSearchBase *CreateRegexSearch(CharClassify* /* charClassTable */)
 #endif
 }
 
+std::string g_exceptionMessage;
+
 /**
  * Find text in document, supporting both forward and backward
  * searches (just pass startPosition > endPosition to do a backward search).
@@ -259,6 +260,7 @@ RegexSearchBase *CreateRegexSearch(CharClassify* /* charClassTable */)
 Sci::Position BoostRegexSearch::FindText(Document* doc, Sci::Position startPosition, Sci::Position endPosition, const char *regexString,
                         bool caseSensitive, bool /*word*/, bool /*wordStart*/, int sciSearchFlags, Sci::Position *lengthRet) 
 {
+	g_exceptionMessage.clear();
 	try {
 		SearchParameters search;
 		
@@ -302,10 +304,12 @@ Sci::Position BoostRegexSearch::FindText(Document* doc, Sci::Position startPosit
 			);
 		search._skip_windows_line_end_as_one_character = (sciSearchFlags & SCFIND_REGEXP_SKIPCRLFASONE) != 0;
 		
+		std::locale l = std::locale::global(std::locale(""));
 		Match match =
 			isUtf8 ? _utf8.FindText(search)
 			       : _ansi.FindText(search);
-		
+		std::locale::global(l);
+
 		if (match.found())
 		{
 			*lengthRet = match.length();
@@ -319,10 +323,23 @@ Sci::Position BoostRegexSearch::FindText(Document* doc, Sci::Position startPosit
 		}
 	}
 
-	catch(regex_error& /*ex*/)
+	catch(regex_error& ex)
 	{
 		// -1 is normally used for not found, -2 is used here for invalid regex
+		g_exceptionMessage = ex.what();
 		return -2;
+	}
+
+	catch(boost::wrapexcept<std::runtime_error>& ex)
+	{
+		g_exceptionMessage = ex.what();
+		return -3;
+	}
+
+	catch(...)
+	{
+		g_exceptionMessage = "Unexpected exception while searching";
+		return -3;
 	}
 }
 
@@ -399,7 +416,9 @@ void BoostRegexSearch::EncodingDependent<CharT, CharacterIterator>::compileRegex
 {
 	if (_lastCompileFlags != compileFlags || _lastRegexString != regex)
 	{
+		std::locale l = std::locale("");
 		_regex = Regex(CharTPtr(regex), static_cast<regex_constants::syntax_option_type>(compileFlags));
+		std::locale::global(l);
 		_lastRegexString = regex;
 		_lastCompileFlags = compileFlags;
 	}
@@ -429,9 +448,11 @@ bool BoostRegexSearch::SearchParameters::isLineEnd(Sci::Position position)
 
 const char *BoostRegexSearch::SubstituteByPosition(Document* doc, const char *text, Sci::Position *length) {
 	delete[] _substituted;
+	std::locale l = std::locale::global(std::locale(""));
 	_substituted = (doc->CodePage() == SC_CP_UTF8)
 		? _utf8.SubstituteByPosition(text, length)
 		: _ansi.SubstituteByPosition(text, length);
+	std::locale::global(l);
 	return _substituted;
 }
 

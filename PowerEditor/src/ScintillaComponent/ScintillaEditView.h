@@ -620,6 +620,7 @@ public:
 
 protected:
 	static HINSTANCE _hLib;
+
 	static int _refCount;
 
     static UserDefineDialog _userDefineDlg;

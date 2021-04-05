@@ -191,13 +191,7 @@ bool ProjectPanel::checkIfNeedSave()
 		if (res == IDYES)
 		{
 			if (!saveWorkSpace())
-				pNativeSpeaker->messageBox("ProjectPanelChangedSaveError",
-					_hSelf,
-					TEXT("Your workspace has not been saved."),
-					TEXT("$STR_REPLACE$"),
-					MB_OK | MB_ICONERROR,
-					0,
-					title);
+				return false;
 		}
 		else if (res == IDNO)
 		{
@@ -436,7 +430,9 @@ bool ProjectPanel::saveWorkSpace()
 	}
 	else
 	{
-		writeWorkSpace();
+		if (!writeWorkSpace())
+			return false;
+
 		setWorkSpaceDirty(false);
 		return true;
 	} 
@@ -460,9 +456,6 @@ bool ProjectPanel::writeWorkSpace(const TCHAR *projectFileName)
     if (!tvRoot)
       return false;
 
-	TCHAR * fileName = PathFindFileName(fn2write);
-	_treeView.renameItem(tvRoot, fileName);
-
     for (HTREEITEM tvProj = _treeView.getChildFrom(tvRoot);
         tvProj != NULL;
         tvProj = _treeView.getNextSibling(tvProj))
@@ -475,7 +468,22 @@ bool ProjectPanel::writeWorkSpace(const TCHAR *projectFileName)
 		projRoot->ToElement()->SetAttribute(TEXT("name"), tvItem.pszText);
 		buildProjectXml(projRoot, tvProj, fn2write);
     }
-    projDoc.SaveFile();
+
+	if (!projDoc.SaveFile())
+	{
+		const TCHAR * title = _workSpaceFilePath.length() > 0 ? PathFindFileName (_workSpaceFilePath.c_str()) : _panelTitle.c_str();
+		NativeLangSpeaker *pNativeSpeaker = (NppParameters::getInstance()).getNativeLangSpeaker();
+		pNativeSpeaker->messageBox("ProjectPanelSaveError",
+		_hSelf,
+		TEXT("An error occurred while writing your workspace file.\nYour workspace has not been saved."),
+		TEXT("$STR_REPLACE$"),
+		MB_OK | MB_ICONERROR,
+		0,
+		title);
+		return false;
+	}
+	TCHAR * fileName = PathFindFileName(fn2write);
+	_treeView.renameItem(tvRoot, fileName);
 	return true;
 }
 
@@ -1090,6 +1098,7 @@ void ProjectPanel::popupMenuCmd(int cmdID)
 		case IDM_PROJECT_RELOADWS:
 		{
 			NativeLangSpeaker *pNativeSpeaker = (NppParameters::getInstance()).getNativeLangSpeaker();
+			bool forceOpen = false;
 			if (_isDirty)
 			{
 				int res = pNativeSpeaker->messageBox("ProjectPanelReloadDirty",
@@ -1100,7 +1109,7 @@ void ProjectPanel::popupMenuCmd(int cmdID)
 
 				if (res == IDYES)
 				{
-					// Do nothing
+					forceOpen = true;
 				}
 				else if (res == IDNO)
 				{
@@ -1110,7 +1119,7 @@ void ProjectPanel::popupMenuCmd(int cmdID)
 
 			if (::PathFileExists(_workSpaceFilePath.c_str()))
 			{
-				openWorkSpace(_workSpaceFilePath.c_str());
+				openWorkSpace(_workSpaceFilePath.c_str(), forceOpen);
 			}
 			else
 			{
@@ -1231,17 +1240,18 @@ bool ProjectPanel::saveWorkSpaceAs(bool saveCopyAs)
 	fDlg.setExtIndex(0);		// 0 index for "custom extention" type if any else for "All types *.*"
 
 	const generic_string fn = fDlg.doSaveDlg();
-	if (!fn.empty())
+	if (fn.empty())
+		return false;
+
+	if (!writeWorkSpace(fn.c_str()))
+		return false;
+
+	if (!saveCopyAs)
 	{
-		writeWorkSpace(fn.c_str());
-		if (!saveCopyAs)
-		{
-			_workSpaceFilePath = fn;
-			setWorkSpaceDirty(false);
-		}
-		return true;
+		_workSpaceFilePath = fn;
+		setWorkSpaceDirty(false);
 	}
-	return false;
+	return true;
 }
 
 void ProjectPanel::setFileExtFilter(CustomFileDialog & fDlg)

@@ -991,7 +991,7 @@ int Notepad_plus::getHtmlXmlEncoding(const TCHAR *fileName) const
 		_invisibleEditView.execute(SCI_SETTARGETRANGE, startPos, endPos);
 
 		auto posFound = _invisibleEditView.execute(SCI_SEARCHINTARGET, strlen(xmlHeaderRegExpr), reinterpret_cast<LPARAM>(xmlHeaderRegExpr));
-		if (posFound != -1 && posFound != -2)
+		if (posFound >= 0)
 		{
             const char *encodingBlockRegExpr = "encoding[ \\t]*=[ \\t]*\"[^\".]+\"";
 			_invisibleEditView.execute(SCI_SEARCHINTARGET, strlen(encodingBlockRegExpr), reinterpret_cast<LPARAM>(encodingBlockRegExpr));
@@ -1035,10 +1035,10 @@ int Notepad_plus::getHtmlXmlEncoding(const TCHAR *fileName) const
 
 		int posFound = static_cast<int32_t>(_invisibleEditView.execute(SCI_SEARCHINTARGET, strlen(htmlHeaderRegExpr), reinterpret_cast<LPARAM>(htmlHeaderRegExpr)));
 
-		if (posFound == -1 || posFound == -2)
+		if (posFound < 0)
 		{
 			posFound = static_cast<int32_t>(_invisibleEditView.execute(SCI_SEARCHINTARGET, strlen(htmlHeaderRegExpr2), reinterpret_cast<LPARAM>(htmlHeaderRegExpr2)));
-			if (posFound == -1 || posFound == -2)
+			if (posFound < 0)
 				return -1;
 		}
 		_invisibleEditView.execute(SCI_SEARCHINTARGET, strlen(charsetBlock), reinterpret_cast<LPARAM>(charsetBlock));
@@ -2207,11 +2207,11 @@ void Notepad_plus::setupColorSampleBitmapsOnMainMenuItems()
 	}
 	bitmapOnStyleMenuItemsInfo[] =
 	{
-		{ IDM_SEARCH_GONEXTMARKER5, SCE_UNIVERSAL_FOUND_STYLE_EXT5, { IDM_SEARCH_MARKALLEXT5, IDM_SEARCH_UNMARKALLEXT5, IDM_SEARCH_GOPREVMARKER5, IDM_SEARCH_STYLE5TOCLIP } },
-		{ IDM_SEARCH_GONEXTMARKER4, SCE_UNIVERSAL_FOUND_STYLE_EXT4, { IDM_SEARCH_MARKALLEXT4, IDM_SEARCH_UNMARKALLEXT4, IDM_SEARCH_GOPREVMARKER4, IDM_SEARCH_STYLE4TOCLIP } },
-		{ IDM_SEARCH_GONEXTMARKER3, SCE_UNIVERSAL_FOUND_STYLE_EXT3, { IDM_SEARCH_MARKALLEXT3, IDM_SEARCH_UNMARKALLEXT3, IDM_SEARCH_GOPREVMARKER3, IDM_SEARCH_STYLE3TOCLIP } },
-		{ IDM_SEARCH_GONEXTMARKER2, SCE_UNIVERSAL_FOUND_STYLE_EXT2, { IDM_SEARCH_MARKALLEXT2, IDM_SEARCH_UNMARKALLEXT2, IDM_SEARCH_GOPREVMARKER2, IDM_SEARCH_STYLE2TOCLIP } },
-		{ IDM_SEARCH_GONEXTMARKER1, SCE_UNIVERSAL_FOUND_STYLE_EXT1, { IDM_SEARCH_MARKALLEXT1, IDM_SEARCH_UNMARKALLEXT1, IDM_SEARCH_GOPREVMARKER1, IDM_SEARCH_STYLE1TOCLIP } },
+		{ IDM_SEARCH_GONEXTMARKER5, SCE_UNIVERSAL_FOUND_STYLE_EXT5, { IDM_SEARCH_MARKALLEXT5, IDM_SEARCH_MARKONEEXT5, IDM_SEARCH_UNMARKALLEXT5, IDM_SEARCH_GOPREVMARKER5, IDM_SEARCH_STYLE5TOCLIP } },
+		{ IDM_SEARCH_GONEXTMARKER4, SCE_UNIVERSAL_FOUND_STYLE_EXT4, { IDM_SEARCH_MARKALLEXT4, IDM_SEARCH_MARKONEEXT4, IDM_SEARCH_UNMARKALLEXT4, IDM_SEARCH_GOPREVMARKER4, IDM_SEARCH_STYLE4TOCLIP } },
+		{ IDM_SEARCH_GONEXTMARKER3, SCE_UNIVERSAL_FOUND_STYLE_EXT3, { IDM_SEARCH_MARKALLEXT3, IDM_SEARCH_MARKONEEXT3, IDM_SEARCH_UNMARKALLEXT3, IDM_SEARCH_GOPREVMARKER3, IDM_SEARCH_STYLE3TOCLIP } },
+		{ IDM_SEARCH_GONEXTMARKER2, SCE_UNIVERSAL_FOUND_STYLE_EXT2, { IDM_SEARCH_MARKALLEXT2, IDM_SEARCH_MARKONEEXT2, IDM_SEARCH_UNMARKALLEXT2, IDM_SEARCH_GOPREVMARKER2, IDM_SEARCH_STYLE2TOCLIP } },
+		{ IDM_SEARCH_GONEXTMARKER1, SCE_UNIVERSAL_FOUND_STYLE_EXT1, { IDM_SEARCH_MARKALLEXT1, IDM_SEARCH_MARKONEEXT1, IDM_SEARCH_UNMARKALLEXT1, IDM_SEARCH_GOPREVMARKER1, IDM_SEARCH_STYLE1TOCLIP } },
 		{ IDM_SEARCH_GONEXTMARKER_DEF, SCE_UNIVERSAL_FOUND_STYLE, { IDM_SEARCH_GOPREVMARKER_DEF, IDM_SEARCH_MARKEDTOCLIP } }
 	};
 
@@ -2582,13 +2582,13 @@ void Notepad_plus::setUniModeText()
 			case uniUTF8:
 				uniModeTextString = TEXT("UTF-8-BOM"); break;
 			case uni16BE:
-				uniModeTextString = TEXT("UCS-2 BE BOM"); break;
+				uniModeTextString = TEXT("UTF-16 BE BOM"); break;
 			case uni16LE:
-				uniModeTextString = TEXT("UCS-2 LE BOM"); break;
+				uniModeTextString = TEXT("UTF-16 LE BOM"); break;
 			case uni16BE_NoBOM:
-				uniModeTextString = TEXT("UCS-2 Big Endian"); break;
+				uniModeTextString = TEXT("UTF-16 Big Endian"); break;
 			case uni16LE_NoBOM:
-				uniModeTextString = TEXT("UCS-2 Little Endian"); break;
+				uniModeTextString = TEXT("UTF-16 Little Endian"); break;
 			case uniCookie:
 				uniModeTextString = TEXT("UTF-8"); break;
 			default :
@@ -3002,7 +3002,7 @@ bool Notepad_plus::isConditionExprLine(int lineNumber)
 	const char ifElseForWhileExpr[] = "((else[ \t]+)?if|for|while)[ \t]*[(].*[)][ \t]*|else[ \t]*";
 
 	auto posFound = _pEditView->execute(SCI_SEARCHINTARGET, strlen(ifElseForWhileExpr), reinterpret_cast<LPARAM>(ifElseForWhileExpr));
-	if (posFound != -1 && posFound != -2)
+	if (posFound >= 0)
 	{
 		auto end = _pEditView->execute(SCI_GETTARGETEND);
 		if (end == endPos)
@@ -3149,7 +3149,7 @@ void Notepad_plus::maintainIndentation(TCHAR ch)
 				const char braceExpr[] = "[ \t]*\\{.*";
 
 				int posFound = static_cast<int32_t>(_pEditView->execute(SCI_SEARCHINTARGET, strlen(braceExpr), reinterpret_cast<LPARAM>(braceExpr)));
-				if (posFound != -1 && posFound != -2)
+				if (posFound >= 0)
 				{
 					int end = int(_pEditView->execute(SCI_GETTARGETEND));
 					if (end == endPos2)
@@ -3467,6 +3467,13 @@ void Notepad_plus::setTitle()
 
 	if (_isAdministrator)
 		result += TEXT(" [Administrator]");
+
+	generic_string tbAdd = (NppParameters::getInstance()).getTitleBarAdd();
+	if (!tbAdd.empty())
+	{
+		result += TEXT(" - ");
+		result += tbAdd;
+	}
 
 	::SendMessage(_pPublicInterface->getHSelf(), WM_SETTEXT, 0, reinterpret_cast<LPARAM>(result.c_str()));
 }
@@ -4198,8 +4205,18 @@ void Notepad_plus::docOpenInNewInstance(FileTransferMode mode, int x, int y)
 		command += pY;
 	}
 
-	command += TEXT(" -l");
-	command += ScintillaEditView::langNames[buf->getLangType()].lexerName;
+	LangType lt = buf->getLangType();
+
+	// In case of UDL, "-lLANG" argument part is ignored.
+	// We let new instance detect the user lang type via file extension -
+	// it works in the most of case, except if user applies an UDL manually. 
+	// For example,  this workaround won't work under the following situation:
+	// user applies Markdown to a file named "myMarkdown.abc".
+	if (lt != L_USER)
+	{
+		command += TEXT(" -l");
+		command += ScintillaEditView::langNames[lt].lexerName;
+	}
 	command += TEXT(" -n");
 	command += to_wstring(_pEditView->getCurrentLineNumber() + 1);
 	command += TEXT(" -c");
@@ -4465,8 +4482,8 @@ void Notepad_plus::checkUnicodeMenuItems() const
 	switch (um)
 	{
 		case uniUTF8   : id = IDM_FORMAT_UTF_8; break;
-		case uni16BE   : id = IDM_FORMAT_UCS_2BE; break;
-		case uni16LE   : id = IDM_FORMAT_UCS_2LE; break;
+		case uni16BE   : id = IDM_FORMAT_UTF_16BE; break;
+		case uni16LE   : id = IDM_FORMAT_UTF_16LE; break;
 		case uniCookie : id = IDM_FORMAT_AS_UTF_8; break;
 		case uni8Bit   : id = IDM_FORMAT_ANSI; break;
 	}
@@ -6968,6 +6985,9 @@ static const QuoteParams quotes[] =
 	{TEXT("Anonymous #165"), QuoteParams::rapid, false, SC_CP_UTF8, L_TEXT, TEXT("What's the difference between a police officer and a bullet?\nWhen a bullet kills someone else, you know it's been fired.") },
 	{TEXT("Anonymous #166"), QuoteParams::rapid, false, SC_CP_UTF8, L_TEXT, TEXT("What has 4 letters\nsometimes 9 letters\nbut never has 5 letters") },
 	{TEXT("Anonymous #167"), QuoteParams::slow, false, SC_CP_UTF8, L_TEXT, TEXT("The 'h' in \"software development\" stands for \"happiness\".") },
+	{TEXT("Anonymous #168"), QuoteParams::rapid, false, SC_CP_UTF8, L_TEXT, TEXT("Never let your computer know that you are in a hurry.\nComputers can smell fear.\nThey slow down if they know that you are running out of time.") },
+	{TEXT("Anonymous #169"), QuoteParams::slow, false, SC_CP_UTF8, L_TEXT, TEXT("JavaScript is not a language.\nIt's a programming jokes generator.") },
+	{TEXT("Anonymous #170"), QuoteParams::slow, false, SC_CP_UTF8, L_TEXT, TEXT("A journalist asked Linus Torvalds what makes code bad.\nHe replied : No comment.") },
 	{TEXT("A developer"), QuoteParams::slow, false, SC_CP_UTF8, L_TEXT, TEXT("No hugs & kisses.\nOnly bugs & fixes.") },
 	{TEXT("Elon Musk"), QuoteParams::rapid, false, SC_CP_UTF8, L_TEXT, TEXT("Don't set your password as your child's name.\nName your child after your password.") },
 	{TEXT("OOP"), QuoteParams::slow, false, SC_CP_UTF8, L_TEXT, TEXT("If you want to treat women as objects,\ndo it with class.")},

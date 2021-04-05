@@ -125,6 +125,7 @@ public:
 	void removeAll();
 	void openAll();
 	void wrapLongLinesToggle();
+	void purgeToggle();
 	void copy();
 	void beginNewFilesSearch();
 	void finishFilesSearch(int count, int searchedCount, bool isMatchLines, bool searchedEntireNotSelection);
@@ -161,6 +162,7 @@ private:
 
 	bool _canBeVolatiled = true;
 	bool _longLinesAreWrapped = false;
+	bool _purgeBeforeEverySearch = false;
 
 	generic_string _prefixLineStr;
 
@@ -341,7 +343,7 @@ public :
 
 	void execSavedCommand(int cmd, uptr_t intValue, const generic_string& stringValue);
 	void clearMarks(const FindOption& opt);
-	void setStatusbarMessage(const generic_string & msg, FindStatus staus);
+	void setStatusbarMessage(const generic_string & msg, FindStatus staus, char const *pTooltipMsg = NULL);
 	generic_string getScopeInfoForStatusBar(FindOption const *pFindOpt) const;
 	Finder * createFinder();
 	bool removeFinder(Finder *finder2remove);
@@ -392,6 +394,11 @@ private :
 	winVer _winVer = winVer::WV_UNKNOWN;
 	StatusBar _statusBar;
 	FindStatus _statusbarFindStatus;
+
+	generic_string _statusbarTooltipMsg;
+	HWND _statusbarTooltipWnd = nullptr;
+	HICON _statusbarTooltipIcon = nullptr;
+	int _statusbarTooltipIconSize = 0;
 
 	HFONT _hMonospaceFont = nullptr;
 
